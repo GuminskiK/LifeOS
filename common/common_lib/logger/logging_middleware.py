@@ -38,4 +38,3 @@ class StructlogMiddleware(BaseHTTPMiddleware):
                              process_time_ms=round(process_time * 1000, 2),
                              exc_info=e)
             raise
-        
