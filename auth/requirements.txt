@@ -17,4 +17,5 @@ asgi-correlation-id
 python-json-logger
 fastapi-mail
 slowapi
-../common
+# common_lib is installed manually in CI or local dev environment
+# common_lib @ file://localhost/common
