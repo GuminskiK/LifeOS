@@ -15,6 +15,7 @@ limiter.enabled = False
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+
 class FakeAsyncRedis:
     def __init__(self):
         self.data = {}
@@ -46,7 +47,7 @@ class FakeAsyncRedis:
 
     async def hget(self, name, key):
         return self.data.get(name, {}).get(key)
-        
+
     async def hgetall(self, name):
         return self.data.get(name, {})
 
@@ -72,18 +73,26 @@ class FakeAsyncRedis:
         class FakePipeline:
             def __init__(self, parent):
                 self.parent = parent
+
             def srem(self, name, value):
                 if name in self.parent.data and value in self.parent.data[name]:
                     self.parent.data[name].remove(value)
+
             def delete(self, name):
                 if name in self.parent.data:
                     del self.parent.data[name]
+
             async def execute(self):
                 pass
+
         return FakePipeline(self)
 
+
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-TestingSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+TestingSessionLocal = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+
 
 @pytest_asyncio.fixture(scope="function")
 async def db_session():
@@ -93,12 +102,13 @@ async def db_session():
     """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-        
+
     async with TestingSessionLocal() as session:
         yield session
-        
+
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
+
 
 @pytest.fixture(scope="function")
 def client(db_session):
@@ -106,22 +116,23 @@ def client(db_session):
     Nadpisuje metodę pobierania sesji w aplikacji, podpinając naszą sesję testową,
     oraz override'uje Redis.
     """
+
     async def override_get_session():
         yield db_session
 
     fake_redis = FakeAsyncRedis()
+
     def override_get_redis():
         return fake_redis
 
     app.dependency_overrides[db_deps.get_session] = override_get_session
     app.dependency_overrides[db_deps.get_redis] = override_get_redis
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.pop(db_deps.get_session, None)
     app.dependency_overrides.pop(db_deps.get_redis, None)
-
 
 
 @pytest.fixture(scope="function")
@@ -132,6 +143,7 @@ def override_admin():
     Zwraca obiekt User.
     """
     from app.models.Users import User
+
     async def mock_admin():
         return User(
             id=999,
@@ -140,11 +152,9 @@ def override_admin():
             hashed_password="dummy",
             email_blind_index="dummy",
             is_superuser=True,
-            is_activated=True
+            is_activated=True,
         )
-    
+
     app.dependency_overrides[get_current_admin_user] = mock_admin
     yield
     app.dependency_overrides.pop(get_current_admin_user, None)
-
-

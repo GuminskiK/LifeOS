@@ -12,12 +12,16 @@ async def get_user_by_id(session: db_session, id: int) -> User | None:
     user = result.one_or_none()
     return user
 
+
 async def get_user_by_username(session: db_session, username: str) -> User | None:
     result = await session.exec(select(User).where(User.username == username))
     user = result.one_or_none()
     return user
 
+
 async def get_user_by_email(session: db_session, email: str) -> Optional[User]:
     blind_index = get_blind_index(email)
-    result = await session.exec(select(User).where(User.email_blind_index == blind_index))
+    result = await session.exec(
+        select(User).where(User.email_blind_index == blind_index)
+    )
     return result.one_or_none()

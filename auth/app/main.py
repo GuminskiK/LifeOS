@@ -17,6 +17,7 @@ from app.api.routers import apikeys, auth, two_fa
 
 setup_logging(json_logs=False, log_level="INFO")
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -45,24 +46,28 @@ async def lifespan(app: FastAPI):
                 superuser = User(
                     username=settings.FIRST_SUPERUSER,
                     email=f"{settings.FIRST_SUPERUSER}@example.com",
-                    email_blind_index=get_blind_index(f"{settings.FIRST_SUPERUSER}@example.com"),
-                    hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+                    email_blind_index=get_blind_index(
+                        f"{settings.FIRST_SUPERUSER}@example.com"
+                    ),
+                    hashed_password=get_password_hash(
+                        settings.FIRST_SUPERUSER_PASSWORD
+                    ),
                     is_superuser=True,
-                    is_2fa_enabled=False
+                    is_2fa_enabled=False,
                 )
                 session.add(superuser)
                 await session.commit()
-                print(f"Superuser '{settings.FIRST_SUPERUSER}' created.")       
+                print(f"Superuser '{settings.FIRST_SUPERUSER}' created.")
             else:
                 print("Superuser already exists.")
     except Exception as e:
-        print(f"Skipping DB init / superuser creation, DB likely not initialized or unreachable (e.g. Test Mode): {e}")
+        print(
+            f"Skipping DB init / superuser creation, DB likely not initialized or unreachable (e.g. Test Mode): {e}"
+        )
     yield
 
-app = FastAPI(
-    lifespan=lifespan,     
-    title=settings.APP_NAME,
-    root_path="/api")
+
+app = FastAPI(lifespan=lifespan, title=settings.APP_NAME, root_path="/api")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -92,9 +97,11 @@ app.add_middleware(
 
 healthcheck = Healthcheck(db_session, redis_client)
 
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
 
 @app.get("/health")
 async def health():

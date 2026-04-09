@@ -16,9 +16,9 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install flake8
+        run: pip install ruff
       - name: Run lint
-        run: flake8 .
+        run: ruff check .
 
   test-services:
     runs-on: ubuntu-latest

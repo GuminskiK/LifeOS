@@ -10,6 +10,7 @@ class TokenTypes(str, Enum):
     ACTIVATE = "activate"
     CHANGE_PASSWORD = "change_password"
 
+
 class Token(SQLModel):
     access_token: str
     token_type: str

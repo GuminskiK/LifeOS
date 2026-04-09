@@ -23,6 +23,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 APP_NAME = settings.APP_NAME
 
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -40,14 +41,11 @@ def get_password_hash(plain: str) -> str:
 
 
 def create_token(
-    user_id: int, 
-    username: str,
-    token_type: str, 
-    expires_delta: timedelta
+    user_id: int, username: str, token_type: str, expires_delta: timedelta
 ) -> str:
     expire = _now() + expires_delta
     jti = str(uuid.uuid4())
-    
+
     to_encode = {
         "user_id": user_id,
         "is_superuser": False,
@@ -57,9 +55,9 @@ def create_token(
         "aud": APP_NAME + "-api",
         "jti": jti,
         "typ": token_type,
-        "sub": username
+        "sub": username,
     }
-        
+
     return encode_token(to_encode)
 
 
@@ -68,10 +66,24 @@ def encode_token(to_encode: dict) -> str:
 
 
 def decode_token(token: str) -> dict[str, Any]:
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience=APP_NAME + "-api", issuer=APP_NAME)
+    return jwt.decode(
+        token,
+        SECRET_KEY,
+        algorithms=[ALGORITHM],
+        audience=APP_NAME + "-api",
+        issuer=APP_NAME,
+    )
 
 
-async def store_refresh_token(redis_client, jti: str, user_id: str, exp: int | datetime, *, device: Optional[str] = None, ip: Optional[str] = None):
+async def store_refresh_token(
+    redis_client,
+    jti: str,
+    user_id: str,
+    exp: int | datetime,
+    *,
+    device: Optional[str] = None,
+    ip: Optional[str] = None,
+):
     now = _now()
     if isinstance(exp, int):
         ttl = int(exp - int(now.timestamp()))
@@ -95,7 +107,6 @@ async def store_refresh_token(redis_client, jti: str, user_id: str, exp: int | d
     if ip:
         mapping["ip"] = ip
 
-    
     await redis_client.hset(key, mapping=mapping)
     await redis_client.expire(key, ttl)
 

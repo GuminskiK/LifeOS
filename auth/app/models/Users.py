@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 USERNAME_PATTERN = r"^[a-zA-Z0-9_\-]+$"
 
+
 def validate_password_strength(v: str) -> str:
     if not v:
         return v
@@ -23,23 +24,28 @@ def validate_password_strength(v: str) -> str:
         raise ValueError("Hasło musi posiadać przynajmniej jeden znak specjalny")
     return v
 
+
 class UserBase(SQLModel):
-    username: str = Field(index=True, unique=True, min_length=3, max_length=40, regex=USERNAME_PATTERN)
+    username: str = Field(
+        index=True, unique=True, min_length=3, max_length=40, regex=USERNAME_PATTERN
+    )
     email: EmailStr = Field(unique=True)
 
+
 class User(UserBase, table=True):
-    id: int | None = Field(default= None, primary_key=True)
-    is_superuser: bool = Field(default = False)
-    is_activated: bool = Field(default = False)
-    
+    id: int | None = Field(default=None, primary_key=True)
+    is_superuser: bool = Field(default=False)
+    is_activated: bool = Field(default=False)
+
     hashed_password: str = Field()
     email_blind_index: str
 
     totp_secret: str | None = Field(default=None)
     is_totp_enabled: bool = Field(default=False)
     backup_codes: list[str] | None = Field(default=None, sa_column=Column(JSON))
-    
+
     api_keys: List["APIKey"] = Relationship(back_populates="owner")
+
 
 class UserCreate(UserBase):
     plain_password: str
@@ -49,14 +55,18 @@ class UserCreate(UserBase):
     def check_password(cls, v):
         return validate_password_strength(v)
 
+
 class UserRead(UserBase):
     id: int
     is_superuser: bool
     is_activated: bool
     is_totp_enabled: bool
 
+
 class UserUpdate(SQLModel):
-    username: Optional[str] = Field(default=None, min_length=3, max_length=40, regex=USERNAME_PATTERN)
+    username: Optional[str] = Field(
+        default=None, min_length=3, max_length=40, regex=USERNAME_PATTERN
+    )
     plain_password: Optional[str] = None
 
     @field_validator("plain_password")
@@ -65,6 +75,7 @@ class UserUpdate(SQLModel):
         if v is not None:
             return validate_password_strength(v)
         return v
+
 
 class NewPasswordModel(SQLModel):
     plain_password: str

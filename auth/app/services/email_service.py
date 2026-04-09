@@ -15,14 +15,15 @@ conf = ConnectionConfig(
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=bool(settings.MAIL_USERNAME and settings.MAIL_PASSWORD),
-    VALIDATE_CERTS=False
+    VALIDATE_CERTS=False,
 )
 
 fm = FastMail(conf)
 
+
 async def send_activation_email(email_to: EmailStr, token: str):
     activation_link = f"{settings.FRONTEND_URL}/activate?token={token}"
-    
+
     html_body = f"""
     <h3>Witaj!</h3>
     <p>Dziękujemy za rejestrację. Kliknij w poniższy link, aby aktywować swoje konto:</p>
@@ -35,9 +36,9 @@ async def send_activation_email(email_to: EmailStr, token: str):
         subject="Aktywuj swoje konto w aplikacji",
         recipients=[email_to],
         body=html_body,
-        subtype=MessageType.html
+        subtype=MessageType.html,
     )
-    
+
     try:
         await fm.send_message(message)
         logger.info("activation_email_sent_successfully", email=email_to)
@@ -45,6 +46,7 @@ async def send_activation_email(email_to: EmailStr, token: str):
         logger.error("failed_to_send_activation_email", error=str(e), email=email_to)
         # Błąd logujemy, ale nie rzucamy HTTPException bo działa w BackgroundTasks
         # raise FailedToSentActivationEmailException()
+
 
 async def send_password_reset_email(email_to: EmailStr, token: str):
     reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
@@ -62,13 +64,15 @@ async def send_password_reset_email(email_to: EmailStr, token: str):
         subject="Reset hasła",
         recipients=[email_to],
         body=html_body,
-        subtype=MessageType.html
+        subtype=MessageType.html,
     )
 
     try:
         await fm.send_message(message)
         logger.info("password_reset_email_sent_successfully", email=email_to)
     except Exception as e:
-        logger.error("failed_to_send_password_reset_email", error=str(e), email=email_to)
+        logger.error(
+            "failed_to_send_password_reset_email", error=str(e), email=email_to
+        )
         # Błąd logujemy, ale nie rzucamy HTTPException bo działa w BackgroundTasks
         # raise FailedToSentPasswordResetEmailException()
