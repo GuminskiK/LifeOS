@@ -41,7 +41,7 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level.upper())
-    
+
     # Configure Fastapi/Uvicorn loggers to use the same handler
     for _log in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
         log = logging.getLogger(_log)
@@ -56,5 +56,7 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
         cache_logger_on_first_use=True,
     )
 
+
 def get_logger(name: str):
     return structlog.get_logger(name)
+
