@@ -16,9 +16,9 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install flake8
+        run: pip install ruff
       - name: Run lint
-        run: flake8 .
+        run: ruff check .
 
   test-services:
     runs-on: ubuntu-latest
@@ -59,8 +59,7 @@ jobs:
         if: steps.check_dir.outputs.exists == 'true' && steps.filter.outputs.changed == 'true'
         run: |
           pip install ./common
-          pip install -r ${{ matrix.service }}/requirements.txt
-          pip install pytest httpx  # httpx do testowania FastAPI
+          pip install -r ${{ matrix.service }}/requirements_dev.txt
 
       - name: Run Pytest
         if: steps.check_dir.outputs.exists == 'true' && steps.filter.outputs.changed == 'true'
