@@ -1,0 +1,69 @@
+name: CI - Lint & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install flake8
+      - name: Run lint
+        run: flake8 .
+
+  test-services:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        service: [auth]
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            changed:
+              - '${{ matrix.service }}/**'
+              - 'common/**'
+              - '.github/workflows/ci.yml'
+
+
+      - name: Set up Python
+        if: steps.filter.outputs.changed == 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Check if service directory exists
+        id: check_dir
+        run: |
+            if [ -d "./${{ matrix.service }}" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            fi
+
+      - name: Install dependencies
+        if: steps.check_dir.outputs.exists == 'true' && steps.filter.outputs.changed == 'true'
+        run: |
+          pip install ./common
+          pip install -r ${{ matrix.service }}/requirements.txt
+          pip install pytest httpx  # httpx do testowania FastAPI
+
+      - name: Run Pytest
+        if: steps.check_dir.outputs.exists == 'true' && steps.filter.outputs.changed == 'true'
+        run: |
+          cd ${{ matrix.service }}
+          pytest
