@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Database + volumes
+postgres_data/
+rssbridge_data/
+*.db
+
+# Logs
+*.log
+.env
+.venv/
