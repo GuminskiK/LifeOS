@@ -64,20 +64,21 @@ class AuthDependency:
             print(f"Exception! Token was {token}")
             raise credentials_exception
 
-    async def get_current_admin_user(
-        self, current_user: CurrentUserContext = Depends(
-            get_current_active_user
-        )
-    ) -> CurrentUserContext:
-        if not current_user.is_superuser:
-            raise AdminNeededException()
-        return current_user
+    def get_current_admin_user(self):
+        async def _get_current_admin_user(
+            current_user: CurrentUserContext = Depends(self.get_current_active_user)
+        ) -> CurrentUserContext:
+            if not current_user.is_superuser:
+                raise AdminNeededException()
+            return current_user
+        return _get_current_admin_user
 
-    async def get_current_owner_or_admin_user(
-        user_id: int,
-        current_user: CurrentUserContext = Depends(get_current_active_user)
-    ) -> CurrentUserContext:
-
-        if current_user.id != user_id and not current_user.is_superuser:
-            raise AdminOrOwnerNeededException()
-        return current_user
+    def get_current_owner_or_admin_user(self):
+        async def _get_current_owner_or_admin_user(
+            user_id: int,
+            current_user: CurrentUserContext = Depends(self.get_current_active_user)
+        ) -> CurrentUserContext:
+            if current_user.id != user_id and not current_user.is_superuser:
+                raise AdminOrOwnerNeededException()
+            return current_user
+        return _get_current_owner_or_admin_user

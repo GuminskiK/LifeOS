@@ -20,3 +20,9 @@ class DBDependency:
 
     def get_redis(self) -> Redis:
         return self.redis_url
+    
+    def get_AsyncSessionLocal(self) -> AsyncSession:
+        return self.AsyncSessionLocal
+    
+    def get_engine(self):
+        return self.engine
