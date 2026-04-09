@@ -56,14 +56,14 @@ jobs:
             fi
 
       - name: Install dependencies
-        if: steps.filter.outputs.changed == 'true'
+        if: steps.check_dir.outputs.exists == 'true' && steps.filter.outputs.changed == 'true'
         run: |
           pip install ./common
           pip install -r ${{ matrix.service }}/requirements.txt
           pip install pytest httpx  # httpx do testowania FastAPI
 
       - name: Run Pytest
-        if: steps.filter.outputs.changed == 'true'
+        if: steps.check_dir.outputs.exists == 'true' && steps.filter.outputs.changed == 'true'
         run: |
           cd ${{ matrix.service }}
           pytest
