@@ -20,3 +20,4 @@ class DBDependency:
 
     def get_redis(self) -> Redis:
         return self.redis_url
+    
