@@ -17,7 +17,7 @@ async def get_exercise(session: db_session, user: current_active_user):
     return await fetch_user_exercise(session, user.id)
 
 @router.get("/{exercise_id}", response_model=ExerciseRead)
-async def get_exercise(session: db_session, user: current_active_user, exercise_id: int):
+async def get_exercise_by_id(session: db_session, user: current_active_user, exercise_id: int):
     return await fetch_exercise_by_id(session, exercise_id, user.id)
 
 @router.patch("/{exercise_id}", response_model=ExerciseRead)

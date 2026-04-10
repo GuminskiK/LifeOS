@@ -4,7 +4,6 @@ from app.models.WorkoutSession import WorkoutSession, WorkoutSessionStatus
 from app.models.Workout import Workout
 from sqlmodel import select, func, desc
 from typing import List, Dict, Any
-from datetime import datetime, timedelta
 
 async def get_exercise_progression(session: db_session, exercise_id: int, owner_id: int) -> List[Dict[str, Any]]:
     """

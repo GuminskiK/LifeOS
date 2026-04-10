@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 
 from app.api.deps import db_session
 from app.core.exceptions.exceptions import BadRequestException # Zakładam istnienie
-from app.models.WorkoutSession import WorkoutSession, WorkoutSessionStatus, WorkoutSessionCreate
+from app.models.WorkoutSession import WorkoutSessionStatus, WorkoutSessionCreate
 from app.models.ExerciseLog import ExerciseLogCreate
 from app.services import workout_crud, workout_session_crud, exercise_log_crud, progression_service
 
@@ -69,7 +69,8 @@ class WorkoutSessionService:
     async def pause_session(self, session: db_session, session_id: int, owner_id: int, redis_client) -> Optional[Dict[str, Any]]:
         """Zmienia status sesji na PAUSED."""
         state = await self.get_state(session_id, owner_id, redis_client)
-        if not state: return None
+        if not state:
+            return None
 
         state["status"] = WorkoutSessionStatus.PAUSED.value
         await redis_client.set(self._get_redis_key(session_id), json.dumps(state))
@@ -84,7 +85,8 @@ class WorkoutSessionService:
     async def resume_session(self, session: db_session, session_id: int, owner_id: int, redis_client) -> Optional[Dict[str, Any]]:
         """Zmienia status sesji na ACTIVE."""
         state = await self.get_state(session_id, owner_id, redis_client)
-        if not state: return None
+        if not state: 
+            return None
 
         state["status"] = WorkoutSessionStatus.ACTIVE.value
         await redis_client.set(self._get_redis_key(session_id), json.dumps(state))

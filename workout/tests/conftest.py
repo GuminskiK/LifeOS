@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from common_lib.rate_limiting import limiter
-from app.api.deps import db_session, redis_client
+from app.api.deps import redis_client
 from app.main import app
 
 # Disable rate limiting for tests

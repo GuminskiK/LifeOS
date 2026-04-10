@@ -3,9 +3,8 @@ from app.services.workout_session_service import WorkoutSessionService
 from app.services import exercise_crud, workout_crud, workout_step_crud, exercise_log_crud
 from app.models.Exercise import ExerciseCreate, StepType, GoalType
 from app.models.Workout import WorkoutCreate
-from app.models.WorkoutStep import WorkoutStepCreate, WorkoutStep
+from app.models.WorkoutStep import WorkoutStepCreate
 from app.models.WorkoutSession import WorkoutSessionStatus
-from sqlmodel import select
 
 @pytest.mark.asyncio
 async def test_full_workout_cycle_integration(db_session, redis_test, test_user_id):

@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import List, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional
 from app.models.Exercise import StepType, GoalType
-from datetime import datetime # Dodano import datetime
 from sqlalchemy import JSON
 if TYPE_CHECKING:
     from .Exercise import Exercise

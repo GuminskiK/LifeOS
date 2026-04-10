@@ -55,22 +55,6 @@ class WorkoutStepNotFoundException(ResourceNotFoundException):
     def __init__(self):
         super().__init__(resource_name="WorkoutStep")
 
-
-class ExerciseNotFoundException(ResourceNotFoundException):
-    def __init__(self):
-        super().__init__(resource_name="Exercise")
-
-class ExerciseLogNotFoundException(ResourceNotFoundException):
-    def __init__(self):
-        super().__init__(resource_name="ExerciseLog")
-
-class WorkoutStepNotFoundException(ResourceNotFoundException):
-    def __init__(self):
-        super().__init__(resource_name="WorkoutStep")
-
-class WorkoutSessionNotFoundException(ResourceNotFoundException):
-    def __init__(self):
-        super().__init__(resource_name="WorkoutSession")
 ###########################
 #class SessionNotFoundException(ResourceNotFoundException):
 #    def __init__(self, resource_name: str = "Session"):

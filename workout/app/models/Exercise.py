@@ -35,8 +35,6 @@ class ExerciseRead(ExerciseBase):
     # Możesz dodać steps: List["WorkoutStepRead"] = [] jeśli chcesz je czytać razem z ćwiczeniem
     # Wymagałoby to stworzenia WorkoutStepRead
 
-class ExerciseRead(ExerciseBase):
-    pass
 
 class ExerciseUpdate(SQLModel):
     name: Optional[str] = None 
