@@ -5,7 +5,7 @@ from app.core.exceptions.exceptions import WorkoutStepNotFoundException
 
 async def create_workoutstep(session: db_session, workoutstep: WorkoutStepCreate, user_id: int):
     
-    db_workoutstep = WorkoutStep(**workoutstep.model_dump(), owner_id=user_id)
+    db_workoutstep = WorkoutStep(**workoutstep.model_dump())
     session.add(db_workoutstep)
     await session.commit()
     await session.refresh(db_workoutstep)

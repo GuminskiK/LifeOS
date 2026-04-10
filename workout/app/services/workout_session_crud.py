@@ -5,7 +5,8 @@ from app.core.exceptions.exceptions import WorkoutSessionNotFoundException
 
 async def create_workout_session(session: db_session, workout_session: WorkoutSessionCreate, user_id: int):
     
-    db_workout_session = WorkoutSession(**workout_session.model_dump(), owner_id=user_id)
+    db_workout_session = WorkoutSession(**workout_session.model_dump())
+    db_workout_session.owner_id = user_id
     session.add(db_workout_session)
     await session.commit()
     await session.refresh(db_workout_session)

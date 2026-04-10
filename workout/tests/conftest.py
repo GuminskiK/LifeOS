@@ -1,0 +1,142 @@
+import pytest
+import pytest_asyncio
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from common_lib.rate_limiting import limiter
+from app.api.deps import db_session, redis_client
+from app.main import app
+
+# Disable rate limiting for tests
+limiter.enabled = False
+
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+
+class FakeAsyncRedis:
+    def __init__(self):
+        self.data = {}
+        self.expires = {}
+
+    async def hset(self, name, mapping):
+        if name not in self.data:
+            self.data[name] = {}
+        self.data[name].update(mapping)
+
+    async def expire(self, name, time):
+        self.expires[name] = time
+
+    async def set(self, name, value, ex=None):
+        self.data[name] = value
+        if ex:
+            self.expires[name] = ex
+
+    async def get(self, name):
+        return self.data.get(name)
+
+    async def sadd(self, name, value):
+        if name not in self.data:
+            self.data[name] = set()
+        self.data[name].add(value)
+
+    async def smembers(self, name):
+        return self.data.get(name, set())
+
+    async def hget(self, name, key):
+        return self.data.get(name, {}).get(key)
+
+    async def hgetall(self, name):
+        return self.data.get(name, {})
+
+    async def srem(self, name, value):
+        if name in self.data and value in self.data[name]:
+            self.data[name].remove(value)
+
+    async def delete(self, name):
+        self.data.pop(name, None)
+        self.expires.pop(name, None)
+        return 1
+
+    async def exists(self, name):
+        return int(name in self.data)
+
+    async def sismember(self, name, value):
+        return value in self.data.get(name, set())
+
+    async def ttl(self, name):
+        return 3600
+
+    def pipeline(self):
+        class FakePipeline:
+            def __init__(self, parent):
+                self.parent = parent
+
+            def srem(self, name, value):
+                if name in self.parent.data and value in self.parent.data[name]:
+                    self.parent.data[name].remove(value)
+
+            def delete(self, name):
+                if name in self.parent.data:
+                    del self.parent.data[name]
+
+            async def execute(self):
+                pass
+
+        return FakePipeline(self)
+
+
+engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+TestingSessionLocal = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+
+
+@pytest_asyncio.fixture(scope="function")
+async def db_session():
+    """
+    Tworzy nową strukturę bazy danych przed każdym testem i usuwa ją po teście.
+    Dzięki temu baza jest CAŁKOWICIE czysta w każdym teście.
+    """
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+
+    async with TestingSessionLocal() as session:
+        yield session
+
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+
+
+@pytest.fixture(scope="function")
+def client(db_session):
+    """
+    Nadpisuje metodę pobierania sesji w aplikacji, podpinając naszą sesję testową,
+    oraz override'uje Redis.
+    """
+
+    async def override_get_session():
+        yield db_session
+
+    fake_redis = FakeAsyncRedis()
+
+    def override_get_redis():
+        return fake_redis
+
+    app.dependency_overrides[db_session] = override_get_session
+    app.dependency_overrides[redis_client] = override_get_redis
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.pop(db_session, None)
+    app.dependency_overrides.pop(redis_client, None)
+
+@pytest.fixture(scope="function")
+def redis_test():
+    return FakeAsyncRedis()
+
+@pytest.fixture(scope="function")
+def test_user_id():
+    return 1

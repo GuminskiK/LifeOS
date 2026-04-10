@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
-from json import JSON
+from sqlalchemy import JSON
 from typing import Optional, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ class ExerciseBase(SQLModel):
     media_url: Optional[str] = None  # URL do zdjęcia/wideo
     
     # Pole na przyszłość dla AI (np. kąty stawów, parametry techniczne)
-    technical_params: Optional[JSON] = None
+    technical_params: Optional[dict] = Field(default=None, sa_type=JSON)
 
 class Exercise(ExerciseBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
@@ -42,4 +42,4 @@ class ExerciseUpdate(SQLModel):
     name: Optional[str] = None 
     description: Optional[str] = None
     media_url: Optional[str] = None
-    technical_params: Optional[JSON] = None 
+    technical_params: Optional[dict] = None

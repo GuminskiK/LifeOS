@@ -5,7 +5,8 @@ from app.core.exceptions.exceptions import ExerciseNotFoundException
 
 async def create_exercise(session: db_session, exercise: ExerciseCreate, user_id: int):
     
-    db_exercise = Exercise(**exercise.model_dump(), owner_id=user_id)
+    db_exercise = Exercise(**exercise.model_dump())
+    db_exercise.owner_id = user_id
     session.add(db_exercise)
     await session.commit()
     await session.refresh(db_exercise)

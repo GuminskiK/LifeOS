@@ -7,7 +7,8 @@ from app.core.exceptions.exceptions import WorkoutNotFoundException
 
 async def create_workout(session: db_session, workout: WorkoutCreate, user_id: int):
     
-    db_workout = Workout(**workout.model_dump(), owner_id=user_id)
+    db_workout = Workout(**workout.model_dump())
+    db_workout.owner_id = user_id
     session.add(db_workout)
     await session.commit()
     await session.refresh(db_workout)
@@ -19,8 +20,7 @@ async def fetch_workout_by_id(session: db_session, workout_id: int, owner_id: in
 
     result = await session.exec(
         select(Workout)
-        .options(selectinload(Workout.steps))
-        .options(selectinload(WorkoutStep.exercise))
+        .options(selectinload(Workout.steps).selectinload(WorkoutStep.exercise))
         .where(Workout.id == workout_id, Workout.owner_id == owner_id))
     workout = result.one_or_none()
 

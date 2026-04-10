@@ -24,7 +24,7 @@ class WorkoutSessionService:
             owner_id=owner_id,
             status=WorkoutSessionStatus.ACTIVE
         )
-        db_session_record = await workout_session_crud.create_workoutsession(session, session_create, owner_id)
+        db_session_record = await workout_session_crud.create_workout_session(session, session_create, owner_id)
         
         # 3. Przygotuj stan dla Redisa
         steps = []
@@ -149,7 +149,7 @@ class WorkoutSessionService:
                     actual_reps=step["actual_value"] if step["goal_type"] == "reps" else None,
                     actual_time=step["actual_value"] if step["goal_type"] == "time" else None
                 )
-                await exercise_log_crud.create_exerciselog(session, log_data, owner_id)
+                await exercise_log_crud.create_exercise_log(session, log_data, owner_id)
         
         await session.commit()
         

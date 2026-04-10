@@ -35,7 +35,42 @@ class InternalServerErrorException(AppBaseException):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail
         )
 
+class WorkoutNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Workout")
 
+class ExerciseNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Exercise")
+
+class ExerciseLogNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="ExerciseLog")
+
+class WorkoutSessionNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="WorkoutSession")
+
+class WorkoutStepNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="WorkoutStep")
+
+
+class ExerciseNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Exercise")
+
+class ExerciseLogNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="ExerciseLog")
+
+class WorkoutStepNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="WorkoutStep")
+
+class WorkoutSessionNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="WorkoutSession")
 ###########################
 #class SessionNotFoundException(ResourceNotFoundException):
 #    def __init__(self, resource_name: str = "Session"):

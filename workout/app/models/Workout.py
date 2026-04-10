@@ -13,7 +13,13 @@ class WorkoutBase(SQLModel):
 
 class Workout(WorkoutBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
-    steps: List["WorkoutStep"] = Relationship(back_populates="workout", cascade="all, delete-orphan", order_by="WorkoutStep.order_index")
+    steps: List["WorkoutStep"] = Relationship(
+        back_populates="workout", 
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan", 
+            "order_by": "WorkoutStep.order_index"
+        }
+    )
 
 class WorkoutCreate(WorkoutBase):
     pass

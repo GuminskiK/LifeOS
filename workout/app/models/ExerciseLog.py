@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Column, JSON
 from typing import Optional, TYPE_CHECKING
 from datetime import datetime
-from json import JSON
 
 if TYPE_CHECKING:
     from .WorkoutSession import WorkoutSession
@@ -18,7 +18,7 @@ class ExerciseLogBase(SQLModel):
     actual_time: Optional[int] = None # Czas w sekundach
     
     # Pole na przyszłość dla AI Vision
-    raw_data: Optional[JSON] = None
+    raw_data: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     
     timestamp: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
@@ -38,4 +38,4 @@ class ExerciseLogUpdate(SQLModel):
     actual_reps: Optional[int] = None
     actual_weight: Optional[float] = None
     actual_time: Optional[int] = None
-    raw_data: Optional[JSON] = None
+    raw_data: Optional[dict] = None

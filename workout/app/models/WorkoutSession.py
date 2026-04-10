@@ -23,7 +23,10 @@ class WorkoutSessionBase(SQLModel):
 class WorkoutSession(WorkoutSessionBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     workout: Optional["Workout"] = Relationship() # No back_populates needed if not querying sessions from Workout
-    exercise_logs: List["ExerciseLog"] = Relationship(back_populates="session", cascade="all, delete-orphan")
+    exercise_logs: List["ExerciseLog"] = Relationship(
+        back_populates="session", 
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 class WorkoutSessionCreate(WorkoutSessionBase):
     pass
