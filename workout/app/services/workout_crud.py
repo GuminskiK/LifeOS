@@ -1,6 +1,8 @@
 from app.api.deps import db_session
 from app.models.Workout import Workout, WorkoutCreate, WorkoutUpdate
+from app.models.WorkoutStep import WorkoutStep
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from app.core.exceptions.exceptions import WorkoutNotFoundException
 
 async def create_workout(session: db_session, workout: WorkoutCreate, user_id: int):
@@ -15,7 +17,11 @@ async def create_workout(session: db_session, workout: WorkoutCreate, user_id: i
 
 async def fetch_workout_by_id(session: db_session, workout_id: int, owner_id: int):
 
-    result = await session.exec(select(Workout).where(Workout.id == workout_id, Workout.owner_id == owner_id))
+    result = await session.exec(
+        select(Workout)
+        .options(selectinload(Workout.steps))
+        .options(selectinload(WorkoutStep.exercise))
+        .where(Workout.id == workout_id, Workout.owner_id == owner_id))
     workout = result.one_or_none()
 
     if not workout:
@@ -24,15 +30,16 @@ async def fetch_workout_by_id(session: db_session, workout_id: int, owner_id: in
     return workout
 
 
-async def fetch_user_categories(session: db_session, owner_id: int):
+async def fetch_user_workouts(session: db_session, owner_id: int):
 
-    result = await session.exec(select(Workout).where(Workout.owner_id == owner_id))
-    workout = result.all()
+    result = await session.exec(
+        select(Workout)
+        .options(selectinload(Workout.steps))
+        .where(Workout.owner_id == owner_id)
+    )
+    workouts = result.all()
 
-    if not workout:
-        raise WorkoutNotFoundException()
-
-    return workout
+    return workouts
 
 async def update_workout(session: db_session, workout_update: WorkoutUpdate, workout_id: int, owner_id: int):
 

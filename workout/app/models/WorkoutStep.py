@@ -13,7 +13,7 @@ class WorkoutStepBase(SQLModel):
     order_index: int = Field(nullable=False)
     
     type: StepType = Field(default=StepType.EXERCISE)
-    exercise_id: Optional[int] = Field(foreign_key="exercises.id", nullable=True)
+    exercise_id: Optional[int] = Field(foreign_key="exercise.id", nullable=True)
     
     goal_type: GoalType = Field(default=GoalType.REPS)
     goal_value: int = Field(nullable=False)
