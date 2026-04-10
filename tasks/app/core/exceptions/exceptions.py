@@ -37,10 +37,33 @@ class InternalServerErrorException(AppBaseException):
 
 
 ###########################
-#class SessionNotFoundException(ResourceNotFoundException):
-#    def __init__(self, resource_name: str = "Session"):
-#        super().__init__(resource_name=resource_name)
+class CategoryNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "Category"):
+        super().__init__(resource_name=resource_name)
 
+class VaultNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Vault")
+
+class ExperienceTransactionNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="ExperienceTransaction")
+
+class GoalsNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Goals")
+
+class RewardNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Reward")
+
+class StreakNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Streak")
+
+class TaskNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="Task")
 
 ##########################
 #class AdminForibiddenFromCreatingApiKeyException(ForbiddenException):
@@ -52,9 +75,9 @@ class InternalServerErrorException(AppBaseException):
 #########################
 
 
-#class TwoFaAlreadyEnabledException(BadRequestException):
-#    def __init__(self, detail: str = "Bad Request"):
-#        super().__init__(detail="2FA is already enabled")
+class NotEnoughCurrencyException(BadRequestException):
+    def __init__(self, detail: str = "Bad Request"):
+        super().__init__(detail="Not enough currency in vault")
 
 
 ####
