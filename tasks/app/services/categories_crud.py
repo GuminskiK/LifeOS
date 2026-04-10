@@ -3,12 +3,12 @@ from app.models.Categories import Category, CategoryCreate, CategoryUpdate
 from sqlmodel import select
 from app.core.exceptions.exceptions import CategoryNotFoundException
 
-async def create_category(session: db_session, category: CategoryCreate):
+async def create_category(session: db_session, category: CategoryCreate, user_id: int):
     
-    db_category = Category(**category.model_dump)
-    session.add(CategoryCreate)(db_category)
-    session.commit()
-    session.refresh(db_category)
+    db_category = Category(**category.model_dump(), owner_id=user_id)
+    session.add(db_category)
+    await session.commit()
+    await session.refresh(db_category)
 
     return db_category
 

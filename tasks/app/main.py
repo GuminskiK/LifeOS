@@ -10,7 +10,7 @@ from app.api.deps import db_session, redis_client
 from common_lib.logger.logger import setup_logging
 from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
-#from app.api.routers import 
+from app.api.routers import categories, goals, reward_transactions, rewards, streaks, tasks, vault
 
 setup_logging(json_logs=False, log_level="INFO")
 
@@ -22,8 +22,13 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(StructlogMiddleware)
 
-### app.include_router(users.router)
-
+app.include_router(categories.router)
+app.include_router(goals.router)
+app.include_router(reward_transactions.router)
+app.include_router(rewards.router)
+app.include_router(streaks.router)
+app.include_router(tasks.router)
+app.include_router(vault.router)
 
 origins = [
     "http://localhost.tiangolo.com",

@@ -1,10 +1,10 @@
 from app.api.deps import db_session
-from app.models.Goals import Goals
+from app.models.Goals import Goals, GoalsCreate, GoalsUpdate
 from sqlmodel import select
 from app.core.exceptions.exceptions import GoalsNotFoundException
 
-async def create_goal(session: db_session, goal_in: dict, owner_id: int):
-    db_goal = Goals(**goal_in, owner_id=owner_id)
+async def create_goal(session: db_session, goal_in: GoalsCreate, owner_id: int):
+    db_goal = Goals(**goal_in.model_dump(), owner_id=owner_id)
     session.add(db_goal)
     await session.commit()
     await session.refresh(db_goal)
@@ -22,13 +22,14 @@ async def fetch_user_goals(session: db_session, owner_id: int):
     goals = result.all()
     return goals
 
-async def update_goal(session: db_session, goal_update: dict, goal_id: int, owner_id: int):
+async def update_goal(session: db_session, goal_update: GoalsUpdate, goal_id: int, owner_id: int):
     result = await session.exec(select(Goals).where(Goals.id == goal_id, Goals.owner_id == owner_id))
     db_goal = result.one_or_none()
     if not db_goal:
         raise GoalsNotFoundException()
 
-    for key, value in goal_update.items():
+    update_data = goal_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
         setattr(db_goal, key, value)
 
     session.add(db_goal)

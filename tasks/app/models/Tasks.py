@@ -54,6 +54,9 @@ class Task(TaskBase, table=True):
 class TaskRead(TaskBase):
     pass
 
+class TaskCreate(TaskBase):
+    pass
+
 class TaskUpdate(SQLModel):
     title: Optional[str]
     description: Optional[str] = None

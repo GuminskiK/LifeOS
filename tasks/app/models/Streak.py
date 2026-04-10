@@ -16,6 +16,7 @@ class StreakBase(SQLModel):
     length_type: DateType
     last_length_update: datetime
     counter: int
+    max_length: int = Field(default=0)
     occurance_per_length: int
 
 class Streak(StreakBase, table=True):
@@ -25,12 +26,16 @@ class Streak(StreakBase, table=True):
     tasks: List["Task"] = Relationship(back_populates="streaks", link_model=StreakTaskLink)
     goals: List["Goals"] = Relationship(back_populates="streak")
 
-class StreakRead(StreakBase):
+class StreakCreate(StreakBase):
     pass
+
+class StreakRead(StreakBase):
+    id: int
 
 class StreakUpdate(SQLModel):
     length: Optional[int] = None
     length_type: Optional[str] = None
     last_length_update: Optional[datetime] = None
     counter: Optional[int] = None
+    max_length: Optional[int] = None
     occurance_per_length: Optional[int] = None
