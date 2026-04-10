@@ -3,7 +3,7 @@ from app.services.streaks_crud import fetch_streak_by_id
 from app.models.Streak import Streak
 from app.models.DateType import DateType
 from app.services.goal_service import goal_update, goal_downgrade
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta # type: ignore
 
 def is_streak_broken(streak: Streak) -> bool:
     now = datetime.now(timezone.utc)
@@ -34,12 +34,12 @@ async def add_occurance(session: db_session, streak_id: int, owner_id: int):
         db_streak.length += 1
         db_streak.counter = 0
         db_streak.last_length_update = datetime.now(timezone.utc)
-        
+
         # Aktualizacja PR (Personal Record)
         if db_streak.length > db_streak.max_length:
             db_streak.max_length = db_streak.length
 
-        if db_streak.goals != None:
+        if db_streak.goals:
             for goal in db_streak.goals:
                 # `goal` is the model, or is it the id? The models for Goal probably return objects.
                 # In Tasks it says: goal.id
@@ -60,7 +60,7 @@ async def remove_occurance(session: db_session, streak_id: int, owner_id: int):
             db_streak.length -= 1
             db_streak.counter = db_streak.occurance_per_length - 1
             
-            if db_streak.goals != None:
+            if db_streak.goals:
                 for goal in db_streak.goals:
                     await goal_downgrade(session, goal.id, owner_id, db_streak.length)
     else:

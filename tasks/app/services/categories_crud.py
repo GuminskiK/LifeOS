@@ -13,9 +13,9 @@ async def create_category(session: db_session, category: CategoryCreate, user_id
     return db_category
 
 
-async def fetch_category_by_id(session: db_session, category_id: int):
+async def fetch_category_by_id(session: db_session, category_id: int, owner_id: int):
 
-    result = await session.exec(select(Category).where(Category.id == category_id))
+    result = await session.exec(select(Category).where(Category.id == category_id, Category.owner_id == owner_id))
     category = result.one_or_none()
 
     if not category:
@@ -24,9 +24,9 @@ async def fetch_category_by_id(session: db_session, category_id: int):
     return category
 
 
-async def fetch_user_categories(session: db_session, user_id: int):
+async def fetch_user_categories(session: db_session, owner_id: int):
 
-    result = await session.exec(select(Category).where(Category.owner_id == user_id))
+    result = await session.exec(select(Category).where(Category.owner_id == owner_id))
     category = result.all()
 
     if not category:
@@ -34,9 +34,9 @@ async def fetch_user_categories(session: db_session, user_id: int):
 
     return category
 
-async def update_category(session: db_session, category_update: CategoryUpdate, category_id: int):
+async def update_category(session: db_session, category_update: CategoryUpdate, category_id: int, owner_id: int):
 
-    result = await session.exec(select(Category).where(Category.id == category_id))
+    result = await session.exec(select(Category).where(Category.id == category_id, Category.owner_id == owner_id))
     db_category = result.one_or_none()
 
     if not db_category:
@@ -47,21 +47,22 @@ async def update_category(session: db_session, category_update: CategoryUpdate, 
     for key, value in update_data.items():
         setattr(db_category, key, value)
 
-    session.commit(db_category)
-    session.refresh(db_category)
+    session.add(db_category)
+    await session.commit()
+    await session.refresh(db_category)
 
     return db_category
 
 
-async def delete_category(session: db_session, category_id: int):
+async def delete_category(session: db_session, category_id: int, owner_id: int):
 
-    result = await session.exec(select(Category).where(Category.id == category_id))
+    result = await session.exec(select(Category).where(Category.id == category_id, Category.owner_id == owner_id))
     db_category = result.one_or_none()
 
     if not db_category:
         raise CategoryNotFoundException()
 
-    session.delete(db_category)
-    session.commit()
+    await session.delete(db_category)
+    await session.commit()
 
     return None

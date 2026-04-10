@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING,Optional, List
 from datetime import datetime, date
 from dateutil.rrule import *
 from enum import Enum
+from .Streak import StreakTaskLink
 
 if TYPE_CHECKING:
     from .Categories import Category
-    from .Streak import Streak, StreakTaskLink
+    from .Streak import Streak
 
 class TaskType(Enum):
     HABIT = "habit" # czynności powtarzalne na wieki wieków
@@ -24,10 +25,10 @@ class TaskBase(SQLModel):
     type: TaskType = Field(default=TaskType.TASK)
 
     start_date: Optional[datetime]
-    end_date: Optional[datetime]
+    end_date: Optional[datetime] = None
     
-    priority: Optional[int]
-    recurrence: Optional[str]
+    priority: Optional[int] = None
+    recurrence: Optional[str] = None
 
     is_archived: bool = Field(default=False)
 
@@ -41,15 +42,17 @@ class TaskBase(SQLModel):
 
 class Task(TaskBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    owner_id: int = Field(foreign_key="user.id")
+    owner_id: int = Field(index=True)
     
     category: Optional["Category"] = Relationship(back_populates="tasks")
     sub_tasks: List["Task"] = Relationship(
-        back_populates="parent_task",
+        back_populates="parent_task"
+    )
+    parent_task: Optional["Task"] = Relationship(
+        back_populates="sub_tasks",
         sa_relationship_kwargs={"remote_side": "Task.id"}
     )
-    parent_task: Optional["Task"] = Relationship(back_populates="sub_tasks")
-    streaks: List["Streak"] = Relationship(back_populates="tasks", link_model="StreakTaskLink")
+    streaks: List["Streak"] = Relationship(back_populates="tasks", link_model=StreakTaskLink)
     
 class TaskRead(TaskBase):
     pass
@@ -58,16 +61,16 @@ class TaskCreate(TaskBase):
     pass
 
 class TaskUpdate(SQLModel):
-    title: Optional[str]
+    name: Optional[str] = None
     description: Optional[str] = None
     
-    type: TaskType = Field(default=TaskType.TASK)
+    type: Optional[TaskType] = None
 
-    start_date: Optional[datetime]
-    end_date: Optional[datetime]
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
     
-    priority: Optional[int]
-    recurrence: Optional[str]
+    priority: Optional[int] = None
+    recurrence: Optional[str] = None
 
     is_archived: Optional[bool] = None
 

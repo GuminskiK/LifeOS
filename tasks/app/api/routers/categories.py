@@ -29,13 +29,13 @@ async def get_categories(session: db_session, user: current_active_user):
     return await fetch_user_categories(session, user.id)
 
 @router.get("/{category_id}", response_model=CategoryRead)
-async def get_category(session: db_session, category_id: int):
-    return await fetch_category_by_id(session, category_id)
+async def get_category(session: db_session, user: current_active_user, category_id: int):
+    return await fetch_category_by_id(session, category_id, user.id)
 
 @router.patch("/{category_id}", response_model=CategoryRead)
-async def patch_category(session: db_session, category_id: int, update: CategoryUpdate):
-    return await update_category(session, update, category_id)
+async def patch_category(session: db_session, user: current_active_user, category_id: int, update: CategoryUpdate):
+    return await update_category(session, update, category_id, user.id)
 
 @router.delete("/{category_id}", status_code=204)
-async def remove_category(session: db_session, category_id: int):
-    return await delete_category(session, category_id)
+async def remove_category(session: db_session, user: current_active_user, category_id: int):
+    return await delete_category(session, category_id, user.id)

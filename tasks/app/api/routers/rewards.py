@@ -8,8 +8,8 @@ from typing import List
 router = APIRouter(prefix="/rewards", tags=["rewards"])
 
 @router.post("", response_model=RewardRead, status_code=201)
-async def post_reward(session: db_session, user: current_active_user, reward: RewardCreate):
-    return await create_reward(session, reward.model_dump(), user.id)
+async def post_reward(session: db_session, user: current_active_user, reward_in: RewardCreate):
+    return await create_reward(session, reward_in, user.id)
 
 @router.get("", response_model=List[RewardRead])
 async def get_rewards(session: db_session, user: current_active_user):
@@ -17,7 +17,7 @@ async def get_rewards(session: db_session, user: current_active_user):
 
 @router.patch("/{reward_id}", response_model=RewardRead)
 async def patch_reward(session: db_session, user: current_active_user, reward_id: int, update: RewardUpdate):
-    return await update_reward(session, update.model_dump(exclude_unset=True), reward_id, user.id)
+    return await update_reward(session, update, reward_id, user.id)
 
 @router.delete("/{reward_id}", status_code=204)
 async def remove_reward(session: db_session, user: current_active_user, reward_id: int):

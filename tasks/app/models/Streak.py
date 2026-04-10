@@ -21,7 +21,7 @@ class StreakBase(SQLModel):
 
 class Streak(StreakBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    owner_id: int = Field(foreign_key="user.id")
+    owner_id: int = Field(index=True)
 
     tasks: List["Task"] = Relationship(back_populates="streaks", link_model=StreakTaskLink)
     goals: List["Goals"] = Relationship(back_populates="streak")
@@ -34,7 +34,7 @@ class StreakRead(StreakBase):
 
 class StreakUpdate(SQLModel):
     length: Optional[int] = None
-    length_type: Optional[str] = None
+    length_type: Optional[DateType] = None
     last_length_update: Optional[datetime] = None
     counter: Optional[int] = None
     max_length: Optional[int] = None

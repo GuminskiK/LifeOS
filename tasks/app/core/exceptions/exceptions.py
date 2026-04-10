@@ -49,6 +49,10 @@ class ExperienceTransactionNotFoundException(ResourceNotFoundException):
     def __init__(self):
         super().__init__(resource_name="ExperienceTransaction")
 
+class RewardTransactionNotFoundException(ResourceNotFoundException):
+    def __init__(self):
+        super().__init__(resource_name="RewardTransaction")
+
 class GoalsNotFoundException(ResourceNotFoundException):
     def __init__(self):
         super().__init__(resource_name="Goals")

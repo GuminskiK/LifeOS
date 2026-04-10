@@ -3,13 +3,13 @@ from typing import Optional
 
 class RewardBase(SQLModel):
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     price: int
     quantity_left: int
 
 class Reward(RewardBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    owner_id: int = Field(foreign_key="user.id")
+    owner_id: int = Field(index=True)
 
 class RewardCreate(RewardBase):
     pass

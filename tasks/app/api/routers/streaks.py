@@ -9,8 +9,8 @@ from typing import List
 router = APIRouter(prefix="/streaks", tags=["streaks"])
 
 @router.post("", response_model=StreakRead, status_code=201)
-async def post_streak(session: db_session, user: current_active_user, streak: StreakCreate):
-    return await create_streak(session, streak.model_dump(), user.id)
+async def post_streak(session: db_session, user: current_active_user, streak_in: StreakCreate):
+    return await create_streak(session, streak_in, user.id)
 
 @router.get("", response_model=List[StreakRead])
 async def get_streaks(session: db_session, user: current_active_user):

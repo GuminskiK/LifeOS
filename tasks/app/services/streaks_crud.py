@@ -1,17 +1,22 @@
 from app.api.deps import db_session
-from app.models.Streak import Streak, StreakUpdate
+from app.models.Streak import Streak, StreakCreate, StreakUpdate
 from sqlmodel import select
+from app.models.Goals import Goals # Added import for Goals
+from sqlalchemy.orm import selectinload
 from app.core.exceptions.exceptions import StreakNotFoundException
 
-async def create_streak(session: db_session, streak_in: dict, owner_id: int):
-    db_streak = Streak(**streak_in, owner_id=owner_id)
+async def create_streak(session: db_session, streak_in: StreakCreate, owner_id: int):
+    db_streak = Streak(**streak_in.model_dump(), owner_id=owner_id)
     session.add(db_streak)
     await session.commit()
     await session.refresh(db_streak)
     return db_streak
 
 async def fetch_streak_by_id(session: db_session, streak_id: int, owner_id: int):
-    result = await session.exec(select(Streak).where(Streak.id == streak_id, Streak.owner_id == owner_id))
+    result = await session.exec(
+        select(Streak)
+        .options(selectinload(Streak.goals), selectinload(Streak.tasks))
+        .where(Streak.id == streak_id, Streak.owner_id == owner_id))
     streak = result.one_or_none()
     if not streak:
         raise StreakNotFoundException()

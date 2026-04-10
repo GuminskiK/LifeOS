@@ -1,10 +1,10 @@
 from app.api.deps import db_session
-from app.models.ExperienceTransaction import ExperienceTransaction
+from app.models.ExperienceTransaction import ExperienceTransaction, ExperienceTransactionCreate
 from sqlmodel import select
 from app.core.exceptions.exceptions import ExperienceTransactionNotFoundException
 
-async def create_experience_transaction(session: db_session, transaction_in: dict, user_id: int):
-    db_transaction = ExperienceTransaction(**transaction_in, user_id=user_id)
+async def create_experience_transaction(session: db_session, transaction_in: ExperienceTransactionCreate, user_id: int):
+    db_transaction = ExperienceTransaction(**transaction_in.model_dump(exclude_unset=True), user_id=user_id)
     session.add(db_transaction)
     await session.commit()
     await session.refresh(db_transaction)

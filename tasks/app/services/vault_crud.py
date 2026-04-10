@@ -1,5 +1,5 @@
 from app.api.deps import db_session
-from app.models.Vault import Vault
+from app.models.Vault import Vault, VaultUpdate
 from sqlmodel import select
 from app.core.exceptions.exceptions import NotEnoughCurrencyException
 
@@ -13,10 +13,11 @@ async def get_or_create_vault(session: db_session, owner_id: int):
         await session.refresh(db_vault)
     return db_vault
 
-async def update_vault(session: db_session, vault_update: dict, owner_id: int):
+async def update_vault(session: db_session, vault_update: VaultUpdate, owner_id: int):
     db_vault = await get_or_create_vault(session, owner_id)
 
-    for key, value in vault_update.items():
+    update_data = vault_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
         setattr(db_vault, key, value)
 
     session.add(db_vault)

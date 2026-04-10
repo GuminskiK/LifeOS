@@ -1,6 +1,7 @@
 from app.api.deps import db_session
-from app.services.goals_crud import fetch_goal_by_id
+from app.services.goals_crud import fetch_goal_by_id # Import the module directly
 from app.services.vault_crud import add_points_vault, subtract_points_vault
+
 async def goal_update(session: db_session, goal_id: int, owner_id: int, length: int):
 
     db_goal = await fetch_goal_by_id(session, goal_id, owner_id)
@@ -28,4 +29,3 @@ async def goal_downgrade(session: db_session, goal_id: int, owner_id: int, lengt
     await session.refresh(db_goal)
 
     return db_goal
-
