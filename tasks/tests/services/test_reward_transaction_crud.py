@@ -1,9 +1,7 @@
 import pytest
 from app.services import reward_transaction_crud, rewards_crud
-from app.models.RewardTransaction import RewardTransaction
 from app.models.Rewards import RewardCreate
 from app.core.exceptions.exceptions import RewardTransactionNotFoundException
-from datetime import datetime, timezone, timedelta
 
 @pytest.mark.asyncio
 async def test_create_reward_transaction_success(db_sess, test_user_id):

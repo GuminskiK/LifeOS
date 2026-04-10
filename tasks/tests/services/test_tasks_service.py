@@ -4,8 +4,7 @@ from app.services import tasks_service, tasks_crud, vault_crud, experience_trans
 from app.models.Tasks import TaskCreate, TaskType
 from app.models.Categories import CategoryCreate
 from app.models.Streak import StreakCreate, DateType
-from app.core.exceptions.exceptions import TaskNotFoundException, ExperienceTransactionNotFoundException, StreakNotFoundException
-from dateutil.rrule import rrulestr
+from app.core.exceptions.exceptions import TaskNotFoundException
 from app.models.ExperienceTransaction import ExperienceTransactionCreate
 
 @pytest.mark.asyncio

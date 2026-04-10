@@ -26,7 +26,7 @@ async def test_get_or_create_vault_create_new(db_sess, test_user_id):
 
 @pytest.mark.asyncio
 async def test_update_vault_success(db_sess, test_user_id):
-    vault = await vault_crud.get_or_create_vault(db_sess, test_user_id)
+    await vault_crud.get_or_create_vault(db_sess, test_user_id)
     update_in = VaultUpdate(currency_total=200, xp_total=150)
     updated_vault = await vault_crud.update_vault(db_sess, update_in, test_user_id)
 
@@ -35,7 +35,7 @@ async def test_update_vault_success(db_sess, test_user_id):
 
 @pytest.mark.asyncio
 async def test_add_points_vault_success(db_sess, test_user_id):
-    vault = await vault_crud.get_or_create_vault(db_sess, test_user_id)
+    await vault_crud.get_or_create_vault(db_sess, test_user_id)
     updated_vault = await vault_crud.add_points_vault(db_sess, test_user_id, 50, 25)
 
     assert updated_vault.currency_total == 50
@@ -94,7 +94,7 @@ async def test_refund_currency_success(db_sess, test_user_id):
 
 @pytest.mark.asyncio
 async def test_update_vault_other_user(db_sess, test_user_id):
-    vault = await vault_crud.get_or_create_vault(db_sess, test_user_id)
+    await vault_crud.get_or_create_vault(db_sess, test_user_id)
     update_in = VaultUpdate(currency_total=200)
     # This should create a new vault for test_user_id + 1, not update the existing one
     updated_vault = await vault_crud.update_vault(db_sess, update_in, test_user_id + 1)

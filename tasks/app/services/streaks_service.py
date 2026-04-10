@@ -3,7 +3,7 @@ from app.services.streaks_crud import fetch_streak_by_id
 from app.models.Streak import Streak
 from app.models.DateType import DateType
 from app.services.goal_service import goal_update, goal_downgrade
-from datetime import datetime, timezone, timedelta # type: ignore
+from datetime import datetime, timezone # type: ignore
 
 def is_streak_broken(streak: Streak) -> bool:
     now = datetime.now(timezone.utc)

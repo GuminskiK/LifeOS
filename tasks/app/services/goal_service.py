@@ -20,7 +20,7 @@ async def goal_downgrade(session: db_session, goal_id: int, owner_id: int, lengt
 
     db_goal = await fetch_goal_by_id(session, goal_id, owner_id)
 
-    if db_goal.length == length + 1 and db_goal.is_archive == True:
+    if db_goal.length == length + 1 and db_goal.is_archive:
         await subtract_points_vault(session, owner_id, db_goal.reward, 0)
         db_goal.is_archive = False
 

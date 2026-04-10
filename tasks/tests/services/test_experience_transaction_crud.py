@@ -2,7 +2,6 @@ import pytest
 from app.services import experience_transaction_crud
 from app.models.ExperienceTransaction import ExperienceTransactionCreate
 from app.core.exceptions.exceptions import ExperienceTransactionNotFoundException
-from datetime import datetime, timezone, timedelta
 from sqlmodel import select
 
 @pytest.mark.asyncio

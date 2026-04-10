@@ -1,9 +1,9 @@
 import pytest
 from datetime import datetime, timedelta, timezone
-from app.services import streaks_service, streaks_crud, goal_service, vault_crud
+from app.services import streaks_service, streaks_crud, vault_crud
 from app.models.Streak import StreakCreate, DateType
 from app.models.Goals import GoalsCreate
-from app.core.exceptions.exceptions import StreakNotFoundException, GoalsNotFoundException
+from app.core.exceptions.exceptions import StreakNotFoundException
 from app.services.goals_crud import create_goal, fetch_goal_by_id
 
 @pytest.mark.asyncio
@@ -119,7 +119,7 @@ async def test_add_occurance_updates_goal(db_sess, test_user_id):
     await db_sess.commit()
 
     # Add occurrence to streak, which should trigger goal_update
-    updated_streak = await streaks_service.add_occurance(db_sess, streak.id, test_user_id)
+    await streaks_service.add_occurance(db_sess, streak.id, test_user_id)
     # We need to fetch the goal again to get the updated state
     updated_goal = await fetch_goal_by_id(db_sess, goal.id, test_user_id)
     assert updated_goal.is_archive is True # Goal should be archived
@@ -144,7 +144,7 @@ async def test_remove_occurance_downgrades_goal(db_sess, test_user_id):
     await db_sess.commit()
 
     # Remove occurrence from streak, which should trigger goal_downgrade
-    updated_streak = await streaks_service.remove_occurance(db_sess, streak.id, test_user_id)
+    await streaks_service.remove_occurance(db_sess, streak.id, test_user_id)
     # We need to fetch the goal again to get the updated state
     updated_goal = await fetch_goal_by_id(db_sess, goal.id, test_user_id)
     assert updated_goal.is_archive is False

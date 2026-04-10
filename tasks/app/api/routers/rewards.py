@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api.deps import db_session, current_active_user
 from app.models.Rewards import RewardRead, RewardCreate, RewardUpdate
-from app.services.rewards_crud import create_reward, fetch_reward_by_id, fetch_user_rewards, update_reward, delete_reward
+from app.services.rewards_crud import create_reward, fetch_user_rewards, update_reward, delete_reward
 from app.services.rewards_service import claim_reward, unclaim_reward
 from typing import List
 

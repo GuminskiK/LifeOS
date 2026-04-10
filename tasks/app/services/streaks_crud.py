@@ -1,7 +1,6 @@
 from app.api.deps import db_session
 from app.models.Streak import Streak, StreakCreate, StreakUpdate
 from sqlmodel import select
-from app.models.Goals import Goals # Added import for Goals
 from sqlalchemy.orm import selectinload
 from app.core.exceptions.exceptions import StreakNotFoundException
 

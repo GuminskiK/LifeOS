@@ -1,6 +1,6 @@
 import pytest
 from app.services import categories_crud
-from app.models.Categories import CategoryCreate, CategoryUpdate, Category
+from app.models.Categories import CategoryCreate, CategoryUpdate
 from app.core.exceptions.exceptions import CategoryNotFoundException
 
 @pytest.mark.asyncio

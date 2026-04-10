@@ -1,7 +1,6 @@
 import pytest
 from app.services import goal_service, goals_crud, vault_crud
 from app.models.Goals import GoalsCreate
-from app.models.Vault import Vault
 from app.core.exceptions.exceptions import GoalsNotFoundException
 
 @pytest.mark.asyncio

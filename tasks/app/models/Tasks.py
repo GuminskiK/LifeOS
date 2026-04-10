@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING,Optional, List
-from datetime import datetime, date
-from dateutil.rrule import *
+from datetime import datetime
 from enum import Enum
 from .Streak import StreakTaskLink
 
