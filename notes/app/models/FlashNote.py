@@ -5,12 +5,14 @@ from datetime import datetime, timezone
 if TYPE_CHECKING:
     from .Note import Note
 
+
 class FlashNoteBase(SQLModel):
     name: str
 
     note_id: Optional[int] = Field(default=None, foreign_key="note.id")
 
-class FlashNote(FlashNoteBase, table = True):
+
+class FlashNote(FlashNoteBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: int = Field(index=True)
     is_active: bool = Field(default=False)
@@ -23,11 +25,14 @@ class FlashNote(FlashNoteBase, table = True):
 
     note: Optional["Note"] = Relationship(back_populates="flashnote")
 
+
 class FlashNoteCreate(FlashNoteBase):
     pass
 
+
 class FlashNoteRead(FlashNoteBase):
     pass
+
 
 class FlashNoteUpdate(SQLModel):
     name: Optional[str] = None

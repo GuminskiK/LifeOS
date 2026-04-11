@@ -41,46 +41,48 @@ class FlashCardNotFoundException(ResourceNotFoundException):
     def __init__(self, resource_name: str = "FlashCard"):
         super().__init__(resource_name=resource_name)
 
+
 class FlashNoteNotFoundException(ResourceNotFoundException):
     def __init__(self, resource_name: str = "FlashNote"):
         super().__init__(resource_name=resource_name)
+
 
 class FolderNotFoundException(ResourceNotFoundException):
     def __init__(self, resource_name: str = "Folder"):
         super().__init__(resource_name=resource_name)
 
+
 class NoteNotFoundException(ResourceNotFoundException):
     def __init__(self, resource_name: str = "Note"):
         super().__init__(resource_name=resource_name)
+
 
 class MediaNotFoundException(ResourceNotFoundException):
     def __init__(self, resource_name: str = "Media"):
         super().__init__(resource_name=resource_name)
 
+
 ##########################
-#class AdminForibiddenFromCreatingApiKeyException(ForbiddenException):
+# class AdminForibiddenFromCreatingApiKeyException(ForbiddenException):
 #    def __init__(self, detail: str = "Not authorized to perform this action"):
 #        super().__init__(detail="Admin is forbidden from creating api keys")
-
 
 
 #########################
 
 
-#class TwoFaAlreadyEnabledException(BadRequestException):
+# class TwoFaAlreadyEnabledException(BadRequestException):
 #    def __init__(self, detail: str = "Bad Request"):
 #        super().__init__(detail="2FA is already enabled")
 
 
 ####
-#class Invalid2FACodeException(UnauthorizedException):
+# class Invalid2FACodeException(UnauthorizedException):
 #    def __init__(self, detail: str = "Unauthorized"):
 #        super().__init__(detail="Invalid 2FA code")
 
 
-
 #####
-#class FailedToSentActivationEmailException(InternalServerErrorException):
+# class FailedToSentActivationEmailException(InternalServerErrorException):
 #    def __init__(self, detail: str = "Internal server error"):
 #        super().__init__(detail="Failed to sent activation email")
-

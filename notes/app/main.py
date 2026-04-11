@@ -14,7 +14,7 @@ from app.api.routers import srs, folders, notes
 
 setup_logging(json_logs=False, log_level="INFO")
 
-app = FastAPI( title=settings.APP_NAME, root_path="/api")
+app = FastAPI(title=settings.APP_NAME, root_path="/api")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -33,7 +33,7 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:5173",
-    "http://localhost:3000"
+    "http://localhost:3000",
 ]
 
 app.add_middleware(

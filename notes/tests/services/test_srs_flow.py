@@ -1,15 +1,14 @@
 import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from app.models.FlashCard import FlashCardCreate
 from app.services import flash_card_crud, srs_logic_service
+
 
 @pytest.mark.asyncio
 async def test_srs_review_cycle(session, test_user_id):
     # 1. Tworzenie nowej fiszki
     fc_in = FlashCardCreate(
-        name="Test Card",
-        front={"text": "Pytanie"},
-        reverse={"text": "Odpowiedź"}
+        name="Test Card", front={"text": "Pytanie"}, reverse={"text": "Odpowiedź"}
     )
     card = await flash_card_crud.create_flash_card(session, fc_in, test_user_id)
     card.is_active = True
@@ -25,7 +24,7 @@ async def test_srs_review_cycle(session, test_user_id):
     updated_card = await srs_logic_service.process_review_result(
         session, test_user_id, card.id, "card", 5
     )
-    
+
     assert updated_card.repetitions == 1
     assert updated_card.interval == 1
     # Compare naive datetimes to avoid SQLite timezone stripping issues
