@@ -2,10 +2,10 @@ import asyncio
 import random
 import logging
 import re
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional, Any
-from sqlmodel import select, or_, and_
+from typing import Optional
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 import httpx
