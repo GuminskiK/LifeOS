@@ -37,10 +37,25 @@ class InternalServerErrorException(AppBaseException):
 
 
 ###########################
-#class SessionNotFoundException(ResourceNotFoundException):
-#    def __init__(self, resource_name: str = "Session"):
-#        super().__init__(resource_name=resource_name)
+class FlashCardNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "FlashCard"):
+        super().__init__(resource_name=resource_name)
 
+class FlashNoteNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "FlashNote"):
+        super().__init__(resource_name=resource_name)
+
+class FolderNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "Folder"):
+        super().__init__(resource_name=resource_name)
+
+class NoteNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "Note"):
+        super().__init__(resource_name=resource_name)
+
+class MediaNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "Media"):
+        super().__init__(resource_name=resource_name)
 
 ##########################
 #class AdminForibiddenFromCreatingApiKeyException(ForbiddenException):

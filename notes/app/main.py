@@ -10,7 +10,7 @@ from app.api.deps import db_session, redis_client
 from common_lib.logger.logger import setup_logging
 from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
-#from app.api.routers import 
+from app.api.routers import srs, folders, notes
 
 setup_logging(json_logs=False, log_level="INFO")
 
@@ -22,7 +22,9 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(StructlogMiddleware)
 
-### app.include_router(users.router)
+app.include_router(srs.router)
+app.include_router(folders.router)
+app.include_router(notes.router)
 
 
 origins = [
@@ -30,6 +32,8 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5173",
+    "http://localhost:3000"
 ]
 
 app.add_middleware(
