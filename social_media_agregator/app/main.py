@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,7 +37,8 @@ app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(StructlogMiddleware)
 
 # Serwowanie pobranych mediów (filmy i zdjęcia)
-app.mount("/media", StaticFiles(directory="/mnt/storage/media"), name="media")
+os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT), name="media")
 
 app.include_router(posts.router)
 app.include_router(scraper.router)

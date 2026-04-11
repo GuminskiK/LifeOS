@@ -5,10 +5,12 @@ import re
 from datetime import datetime, time, timedelta
 from pathlib import Path
 from typing import List, Optional, Any
-from sqlmodel import Session, select, or_, and_
+from sqlmodel import select, or_, and_
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 import httpx
 import feedparser
+from app.core.config import settings
 from app.models.ScraperSettings import ScraperConfig, ScraperStatus
 from app.models.Platforms import Platform, PlatformType
 from app.models.Posts import Post, PostType
@@ -26,7 +28,7 @@ USER_AGENTS = [
 ]
 
 class ScraperService:
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: AsyncSession):
         self.db = db_session
         self.client = httpx.AsyncClient(timeout=20.0) # Krótszy timeout dla lokalnego RSS Bridge
 
@@ -90,7 +92,7 @@ class ScraperService:
             if new_posts > 0:
                 config.live_check_until = datetime.now() + timedelta(minutes=25)
                 self.db.add(config)
-                self.db.commit()
+                await self.db.commit()
 
             # 2. Live Check - tylko jeśli jesteśmy w oknie czasowym
             if config.live_check_until and datetime.now() < config.live_check_until:
@@ -127,7 +129,7 @@ class ScraperService:
     async def _start_recording(self, username: str, platform_name: str, config: ScraperConfig, custom_url: Optional[str] = None):
         """Uruchamia yt-dlp dla streamów."""
         url = custom_url or f"https://www.tiktok.com/@{username}/live"
-        output = f"/mnt/storage/media/streams/{platform_name}_{username}_{datetime.now().strftime('%Y%m%d_%H%M')}.mp4"
+        output = str(Path(settings.MEDIA_ROOT) / "streams" / f"{platform_name}_{username}_{datetime.now().strftime('%Y%m%d_%H%M')}.mp4")
         ua = self._get_ua(config)
         quality = config.target_quality
 
@@ -153,7 +155,7 @@ class ScraperService:
         logger.critical(f"HARD_STOP triggered for config {config.id}")
         config.status = ScraperStatus.HARD_STOP
         self.db.add(config)
-        self.db.commit()
+        await self.db.commit()
         
         # Wysyłka alertu na Discord
         message = (
@@ -172,7 +174,7 @@ class ScraperService:
         """Pobiera obraz i zapisuje go lokalnie na dysku."""
         try:
             # Określenie ścieżki (zgodnie z Twoją strukturą na RPi)
-            base_dir = Path("/mnt/storage/media/images") / folder_name
+            base_dir = Path(settings.MEDIA_ROOT) / "images" / folder_name
             base_dir.mkdir(parents=True, exist_ok=True)
             
             # Wyciągnięcie nazwy pliku z URL lub wygenerowanie timestampu
@@ -198,9 +200,10 @@ class ScraperService:
 
         for entry in feed.entries:
             # Prosta deduplikacja po URL źródłowym
-            existing = self.db.exec(
+            result = await self.db.exec(
                 select(Post).where(Post.source_url == entry.link)
-            ).first()
+            )
+            existing = result.first()
             
             if existing:
                 continue
@@ -254,15 +257,35 @@ class ScraperService:
             new_posts_count += 1
 
         if new_posts_count > 0:
-            self.db.commit()
+            await self.db.commit()
             logger.info(f"Added {new_posts_count} new posts for {platform.name} ({platform.platform_type})")
+        return new_posts_count
+
+    async def manual_trigger(self, platform_id: int):
+        """Wymusza natychmiastowe pobranie danych dla konkretnej platformy."""
+        statement = select(ScraperConfig, Platform).join(Platform).where(
+            Platform.id == platform_id
+        )
+        result = await self.db.exec(statement)
+        data = result.first()
+        
+        if not data:
+            raise ValueError(f"Nie znaleziono konfiguracji dla platformy o ID {platform_id}")
+            
+        config, platform = data
+        await self._run_scraper_for_platform(config, platform)
+        
+        config.last_run = datetime.now()
+        self.db.add(config)
+        await self.db.commit()
 
     async def process_active_configs(self):
         """Główna pętla wywoływana przez scheduler."""
-        query = select(ScraperConfig, Platform).join(Platform).where(
+        statement = select(ScraperConfig, Platform).join(Platform).where(
             ScraperConfig.status == ScraperStatus.ACTIVE
         )
-        results = self.db.exec(query).all()
+        result = await self.db.exec(statement)
+        results = result.all()
 
         for config, platform in results:
             if not self._is_within_window(config):
@@ -271,16 +294,19 @@ class ScraperService:
             # Dodajemy losowy jitter na poziomie pętli (0-60s), by starty nie były sztywne
             await self._get_random_jitter(0, 60)
 
-            if platform.platform_type == PlatformType.TikTok:
-                await self.run_tiktok_logic(platform, config)
-            else:
-                # Generyczna logika dla innych platform przez RSS Bridge
-                await self._process_generic_rss(platform, config)
+            await self._run_scraper_for_platform(config, platform)
             
             config.last_run = datetime.now()
             self.db.add(config)
         
-        self.db.commit()
+        await self.db.commit()
+
+    async def _run_scraper_for_platform(self, config: ScraperConfig, platform: Platform):
+        """Pomocnicza metoda do uruchomienia scrapowania dla pojedynczej platformy."""
+        if platform.platform_type == PlatformType.TikTok:
+            await self.run_tiktok_logic(platform, config)
+        else:
+            await self._process_generic_rss(platform, config)
 
     async def _process_generic_rss(self, platform: Platform, config: ScraperConfig):
         """Obsługa YouTube, Instagram i X przez RSS Bridge."""

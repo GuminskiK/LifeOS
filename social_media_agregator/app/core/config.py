@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "LifeOS-Auth"
     SECRET_KEY: str = "your-secret-key"
     ALGORITHM: str = "HS256"
+    MEDIA_ROOT: str = "./data/media"
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True

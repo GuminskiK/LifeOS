@@ -13,9 +13,9 @@ async def create_creator(session: db_session, creator_in: CreatorCreate, user_id
     return db_creator
 
 
-async def fetch_creator_by_id(session: db_session, creator_id: int, owner_id: int):
+async def fetch_creator_by_id(session: db_session, creator_id: int, user_id: int):
     result = await session.exec(
-        select(Creator).where(Creator.id == creator_id, Creator.owner_id == owner_id)
+        select(Creator).where(Creator.id == creator_id, Creator.user_id == user_id)
     )
     creator = result.one_or_none()
     if not creator:
@@ -23,17 +23,17 @@ async def fetch_creator_by_id(session: db_session, creator_id: int, owner_id: in
     return creator
 
 
-async def fetch_user_creators(session: db_session, owner_id: int):
-    result = await session.exec(select(Creator).where(Creator.owner_id == owner_id))
+async def fetch_user_creators(session: db_session, user_id: int):
+    result = await session.exec(select(Creator).where(Creator.user_id == user_id))
     creators = result.all()
     return creators
 
 
 async def update_creator(
-    session: db_session, creator_update: CreatorUpdate, creator_id: int, owner_id: int
+    session: db_session, creator_update: CreatorUpdate, creator_id: int, user_id: int
 ):
     result = await session.exec(
-        select(Creator).where(Creator.id == creator_id, Creator.owner_id == owner_id)
+        select(Creator).where(Creator.id == creator_id, Creator.user_id == user_id)
     )
     db_creator = result.one_or_none()
     if not db_creator:
@@ -49,9 +49,9 @@ async def update_creator(
     return db_creator
 
 
-async def delete_creator(session: db_session, creator_id: int, owner_id: int):
+async def delete_creator(session: db_session, creator_id: int, user_id: int):
     result = await session.exec(
-        select(Creator).where(Creator.id == creator_id, Creator.owner_id == owner_id)
+        select(Creator).where(Creator.id == creator_id, Creator.user_id == user_id)
     )
     db_creator = result.one_or_none()
     if not db_creator:

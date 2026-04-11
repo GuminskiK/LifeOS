@@ -14,11 +14,11 @@ async def post_creator(session: db_session, user: current_active_user, creator: 
 
 @router.get("", response_model=List[CreatorRead])
 async def get_creator(session: db_session, user: current_active_user):
-    return await fetch_creator_by_id(session, user.id)
+    return await fetch_user_creators(session, user.id)
 
 @router.get("/{creator_id}", response_model=CreatorRead)
 async def get_creator_by_id(session: db_session, user: current_active_user, creator_id: int):
-    return await fetch_user_creators(session, creator_id, user.id)
+    return await fetch_creator_by_id(session, creator_id, user.id)
 
 @router.patch("/{creator_id}", response_model=CreatorRead)
 async def patch_creator(session: db_session, user: current_active_user, creator_id: int, update: CreatorUpdate):

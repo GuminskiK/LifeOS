@@ -14,11 +14,11 @@ async def post_platform(session: db_session, user: current_active_user, platform
 
 @router.get("", response_model=List[PlatformRead])
 async def get_platform(session: db_session, user: current_active_user):
-    return await fetch_platform_by_id(session, user.id)
+    return await fetch_user_platforms(session, user.id)
 
 @router.get("/{platform_id}", response_model=PlatformRead)
 async def get_platform_by_id(session: db_session, user: current_active_user, platform_id: int):
-    return await fetch_user_platforms(session, platform_id, user.id)
+    return await fetch_platform_by_id(session, platform_id, user.id)
 
 @router.patch("/{platform_id}", response_model=PlatformRead)
 async def patch_platform(session: db_session, user: current_active_user, platform_id: int, update: PlatformUpdate):
