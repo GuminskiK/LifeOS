@@ -1,7 +1,7 @@
 import io
 from app.models.Note import Note
-from weasyprint import HTML, CSS
-from typing import Any, List
+from weasyprint import HTML
+from typing import Any
 
 
 class PDFService:
@@ -26,8 +26,10 @@ class PDFService:
             text = node.get("text", "")
             # Obsługa formatowania tekstu (marks)
             for mark in node.get("marks", []):
-                if mark["type"] == "bold": text = f"<b>{text}</b>"
-                if mark["type"] == "italic": text = f"<i>{text}</i>"
+                if mark["type"] == "bold":
+                    text = f"<b>{text}</b>"
+                if mark["type"] == "italic":
+                    text = f"<i>{text}</i>"
             return text
 
         mapping = {
