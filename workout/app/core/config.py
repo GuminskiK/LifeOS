@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///:memory:"
     REDIS_URL: str = "redis://localhost:6379/0"
-    APP_NAME: str = "LifeOS-Auth"
+    APP_NAME: str = "LifeOS-Workout"
     SECRET_KEY: str = "your-secret-key"
     ALGORITHM: str = "HS256"
 

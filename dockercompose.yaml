@@ -1,0 +1,168 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lifeos-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lifeos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifeos_password}
+      POSTGRES_DB: ${POSTGRES_DB:-lifeos}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lifeos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lifeos-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: lifeos-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+
+  rss-bridge:
+    image: rssbridge/rss-bridge:latest
+    container_name: lifeos-rss-bridge
+    ports:
+      - "3000:80"
+    environment:
+      - RSSBRIDGE_HTTP_PORT=80
+
+  auth:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    container_name: lifeos-auth
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-lifeos}:${POSTGRES_PASSWORD:-lifeos_password}@postgres:5432/lifeos
+      REDIS_URL: redis://redis:6379/0
+      MAIL_SERVER: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./common:/app/common:ro
+
+  notes:
+    build:
+      context: .
+      dockerfile: notes/Dockerfile
+    container_name: lifeos-notes
+    ports:
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-lifeos}:${POSTGRES_PASSWORD:-lifeos_password}@postgres:5432/lifeos_notes
+      REDIS_URL: redis://redis:6379/1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./common:/app/common:ro
+      - notes_storage:/app/storage
+
+  tasks:
+    build:
+      context: .
+      dockerfile: tasks/Dockerfile
+    container_name: lifeos-tasks
+    ports:
+      - "8003:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-lifeos}:${POSTGRES_PASSWORD:-lifeos_password}@postgres:5432/lifeos_tasks
+      REDIS_URL: redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./common:/app/common:ro
+
+  workout:
+    build:
+      context: .
+      dockerfile: workout/Dockerfile
+    container_name: lifeos-workout
+    ports:
+      - "8004:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-lifeos}:${POSTGRES_PASSWORD:-lifeos_password}@postgres:5432/lifeos_workout
+      REDIS_URL: redis://redis:6379/3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./common:/app/common:ro
+
+  social_media_agregator:
+    build:
+      context: .
+      dockerfile: social_media_agregator/Dockerfile
+    container_name: lifeos-social-media-agregator
+    ports:
+      - "8005:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-lifeos}:${POSTGRES_PASSWORD:-lifeos_password}@postgres:5432/lifeos_social_media
+      REDIS_URL: redis://redis:6379/4
+      RSS_BRIDGE_URL: http://rss-bridge:80
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./common:/app/common:ro
+      - sma_storage:/app/storage
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lifeos-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - auth
+      - notes
+      - workout
+      - tasks
+      - social_media_agregator
+      
+volumes:
+  postgres_data:
+  redis_data:
+  notes_storage:
+  sma_storage:
+
+networks:
+  default:
+    name: lifeos-network
