@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlmodel[asyncio]
+asyncpg
+httpx
+pydantic-settings
+redis
+weasyprint
+# common_lib is installed manually in CI or local dev environment
+# common_lib @ file://localhost/common
