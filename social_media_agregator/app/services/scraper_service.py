@@ -1,14 +1,20 @@
 import asyncio
 import random
 import logging
-from datetime import datetime, time
-from typing import List, Optional
+import re
+from datetime import datetime, time, timedelta
+from pathlib import Path
+from typing import List, Optional, Any
 from sqlmodel import Session, select, or_, and_
 
 import httpx
+import feedparser
 from app.models.ScraperSettings import ScraperConfig, ScraperStatus
 from app.models.Platforms import Platform, PlatformType
+from app.models.Posts import Post, PostType
+from app.services.notification_service import send_discord_notification
 
+# Konfiguracja logowania dla RPi - warto pisać do pliku, by nie zapchać RAMu
 logger = logging.getLogger(__name__)
 
 USER_AGENTS = [
@@ -22,7 +28,11 @@ USER_AGENTS = [
 class ScraperService:
     def __init__(self, db_session: Session):
         self.db = db_session
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client = httpx.AsyncClient(timeout=20.0) # Krótszy timeout dla lokalnego RSS Bridge
+
+    async def close(self):
+        """Zamyka klienta HTTP."""
+        await self.client.aclose()
 
     async def _get_random_jitter(self, base_delay: int = 0, max_jitter: int = 10):
         """Dodaje losowe opóźnienie w sekundach."""
@@ -40,35 +50,28 @@ class ScraperService:
         else:  # Okno przechodzące przez północ (np. 22:00 - 04:00)
             return now >= config.active_from or now <= config.active_to
 
-    async def _make_request(self, url: str, config: ScraperConfig, headers: Optional[dict] = None) -> httpx.Response:
-        """Wykonuje zapytanie z rotacją User-Agent i obsługą błędów (Hard Stop)."""
-        if config.status == ScraperStatus.HARD_STOP:
-            raise RuntimeWarning(f"Scraper for platform {config.platform_id} is in HARD_STOP mode.")
-
-        final_headers = headers or {}
-        final_headers["User-Agent"] = config.user_agent_override or random.choice(USER_AGENTS)
-        
-        # Jitter przed każdym zapytaniem (1-5s) by udawać człowieka
-        await self._get_random_jitter(1, 4)
-
+    async def _fetch_rss(self, url: str, config: ScraperConfig) -> httpx.Response:
+        """Pobiera dane z LOKALNEGO RSS Bridge. Nie potrzebujemy tu rotacji UA."""
         try:
-            response = await self.client.get(url, headers=final_headers)
+            response = await self.client.get(url)
             
+            # Jeśli RSS Bridge zwraca błąd od serwisu zewnętrznego (np. 429)
             if response.status_code in [403, 429]:
-                logger.critical(f"Detection suspected (Status {response.status_code}) for config {config.id}. Triggering HARD_STOP.")
-                config.status = ScraperStatus.HARD_STOP
-                self.db.add(config)
-                self.db.commit()
-                # Tutaj można dodać wywołanie zewnętrznego powiadomienia (e.g. Discord Webhook)
-            
+                await self._handle_hard_stop(config)
+                response.raise_for_status()
+                
             response.raise_for_status()
             return response
-
         except httpx.HTTPStatusError as e:
-            config.fail_count += 1
-            self.db.add(config)
-            self.db.commit()
-            raise e
+            logger.error(f"RSS Bridge HTTP error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"RSS Bridge connection error: {e}")
+            raise
+
+    def _get_ua(self, config: ScraperConfig) -> str:
+        """Zwraca dedykowany lub losowy User-Agent."""
+        return config.user_agent_override or random.choice(USER_AGENTS)
 
     async def run_tiktok_logic(self, platform: Platform, config: ScraperConfig):
         """
@@ -80,35 +83,62 @@ class ScraperService:
         
         try:
             # 1. RSS Check
-            response = await self._make_request(rss_url, config)
-            logger.info(f"RSS check for TikTok {platform.name} successful.")
-            # Tutaj logika parsowania xml i dodawania Postów do DB...
+            rss_response = await self._fetch_rss(rss_url, config)
+            new_posts = await self._process_rss_feed(rss_response.text, platform, PostType.Video)
 
-            # 2. Live Check (jeśli jesteśmy w oknie)
-            # Uproszczony check statusu LIVE bez ciężkich bibliotek
-            live_url = f"https://www.tiktok.com/@{platform.name}/live"
-            live_resp = await self._make_request(live_url, config)
+            # Jeśli wykryto nowy post, ustawiamy okno sprawdzania live na 25 minut
+            if new_posts > 0:
+                config.live_check_until = datetime.now() + timedelta(minutes=25)
+                self.db.add(config)
+                self.db.commit()
+
+            # 2. Live Check - tylko jeśli jesteśmy w oknie czasowym
+            if config.live_check_until and datetime.now() < config.live_check_until:
+                is_live = await self._check_live_status(platform.name, config)
+                if is_live:
+                    logger.info(f"TikTok Creator {platform.name} is LIVE! Starting recording...")
+                    asyncio.create_task(self._start_recording(platform.name, "tiktok", config))
             
-            if 'RENDER_DATA' in live_resp.text and '"status":4' in live_resp.text:
-                logger.info(f"TikTok Creator {platform.name} is LIVE! Starting yt-dlp...")
-                # Wywołanie yt-dlp jako subprocess (nie blokujące)
-                asyncio.create_task(self._start_recording(platform.name, "tiktok"))
-
         except Exception as e:
             logger.error(f"Error during TikTok scraping for {platform.name}: {e}")
 
-    async def _start_recording(self, username: str, platform_name: str):
-        """Uruchamia yt-dlp dla streamów."""
-        # Przykładowa komenda yt-dlp zoptymalizowana pod RPi (limitowanie formatu)
+    async def _check_live_status(self, username: str, config: ScraperConfig) -> bool:
+        """Używa yt-dlp do sprawdzenia statusu live (bez pobierania)."""
         url = f"https://www.tiktok.com/@{username}/live"
-        output = f"/mnt/storage/media/streams/{platform_name}_{username}_{datetime.now().strftime('%Y%m%d_%H%M')}.mp4"
+        ua = self._get_ua(config)
         
         process = await asyncio.create_subprocess_exec(
-            'yt-dlp', 
-            '--format', 'bestvideo[height<=720]+bestaudio/best', 
-            '--output', output, 
-            url,
+            'yt-dlp', '--print', 'is_live', '--user-agent', ua, url,
             stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        
+        # Jeśli yt-dlp wypluje 'True', znaczy że stream trwa
+        output = stdout.decode().strip()
+        
+        # Detekcja bana przez yt-dlp
+        if "403" in stderr.decode() or "429" in stderr.decode():
+            await self._handle_hard_stop(config)
+            return False
+            
+        return output == "True"
+
+    async def _start_recording(self, username: str, platform_name: str, config: ScraperConfig, custom_url: Optional[str] = None):
+        """Uruchamia yt-dlp dla streamów."""
+        url = custom_url or f"https://www.tiktok.com/@{username}/live"
+        output = f"/mnt/storage/media/streams/{platform_name}_{username}_{datetime.now().strftime('%Y%m%d_%H%M')}.mp4"
+        ua = self._get_ua(config)
+        quality = config.target_quality
+
+        process = await asyncio.create_subprocess_exec(
+            'yt-dlp', 
+            '--format', f'bestvideo[height<={quality}]+bestaudio/best',
+            '--user-agent', ua,
+            '--output', output,
+            '--no-part', # Ważne dla streamów, by nie tworzyć plików .part
+            url,
+            stdout=asyncio.subprocess.DEVNULL, # Nie chcemy spamu w logach
             stderr=asyncio.subprocess.PIPE
         )
         logger.info(f"Started yt-dlp recording for {username}")
@@ -117,6 +147,115 @@ class ScraperService:
             logger.info(f"Finished recording {username}")
         else:
             logger.error(f"yt-dlp error for {username}: {stderr.decode()}")
+
+    async def _handle_hard_stop(self, config: ScraperConfig):
+        """Aktywuje tryb bezpieczeństwa po wykryciu blokady."""
+        logger.critical(f"HARD_STOP triggered for config {config.id}")
+        config.status = ScraperStatus.HARD_STOP
+        self.db.add(config)
+        self.db.commit()
+        
+        # Wysyłka alertu na Discord
+        message = (
+            f"🚨 **SOCIAL MEDIA AGREGATOR ALERT** 🚨\n"
+            f"Wykryto podejrzenie blokady bota! Uruchomiono **HARD STOP**.\n"
+            f"**Konfiguracja ID:** `{config.id}`\n**Platforma ID:** `{config.platform_id}`"
+        )
+        await send_discord_notification(message)
+
+    def _save_file(self, path: Path, content: bytes):
+        """Pomocnicza funkcja do zapisu binarnego (wywoływana w wątku)."""
+        with open(path, "wb") as f:
+            f.write(content)
+
+    async def _download_media(self, url: str, folder_name: str) -> Optional[str]:
+        """Pobiera obraz i zapisuje go lokalnie na dysku."""
+        try:
+            # Określenie ścieżki (zgodnie z Twoją strukturą na RPi)
+            base_dir = Path("/mnt/storage/media/images") / folder_name
+            base_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Wyciągnięcie nazwy pliku z URL lub wygenerowanie timestampu
+            filename = url.split("/")[-1].split("?")[0]
+            if not filename or "." not in filename:
+                filename = f"img_{int(datetime.now().timestamp())}.jpg"
+            
+            file_path = base_dir / filename
+            
+            response = await self.client.get(url)
+            response.raise_for_status()
+            
+            await asyncio.to_thread(self._save_file, file_path, response.content)
+            return str(file_path)
+        except Exception as e:
+            logger.error(f"Failed to download media from {url}: {e}")
+            return None
+
+    async def _process_rss_feed(self, xml_content: str, platform: Platform, default_type: PostType):
+        """Parsuje XML z RSS Bridge i zapisuje nowe posty w bazie."""
+        feed = feedparser.parse(xml_content)
+        new_posts_count = 0
+
+        for entry in feed.entries:
+            # Prosta deduplikacja po URL źródłowym
+            existing = self.db.exec(
+                select(Post).where(Post.source_url == entry.link)
+            ).first()
+            
+            if existing:
+                continue
+
+            # Mapowanie pól z RSS/Atom na model Post
+            # RSS Bridge zazwyczaj daje datę w formacie entry.published_parsed
+            created_at = datetime.now()
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                created_at = datetime(*entry.published_parsed[:6])
+
+            # Wybieramy typ posta (można rozbudować o analizę contentu)
+            p_type = default_type
+            original_content = entry.get('summary', entry.get('description', ""))
+            content_snippet = original_content.lower()
+
+            if platform.platform_type == PlatformType.YouTube:
+                # Jeśli w tytule/linku jest 'shorts', ustawiamy Short
+                if "/shorts/" in entry.link:
+                    p_type = PostType.Short
+            elif platform.platform_type == PlatformType.Instagram:
+                # Jeśli opis jest krótki i są tagi img, prawdopodobnie Post (zdjęcie)
+                if "<img" in content_snippet:
+                    p_type = PostType.Post
+            elif platform.platform_type == PlatformType.X:
+                # X to głównie tekst
+                p_type = PostType.Text
+                # Ale jeśli ma link do wideo/obrazka w opisie:
+                if "video" in content_snippet or ".mp4" in content_snippet:
+                    p_type = PostType.Video
+
+            # Wyciąganie i pobieranie obrazów dla Instagrama/X
+            local_media_path = None
+            if platform.platform_type in [PlatformType.Instagram, PlatformType.X]:
+                # RSS Bridge zazwyczaj osadza obraz w tagu <img>
+                match = re.search(r'<img [^>]*src="([^"]+)"', original_content)
+                if match:
+                    img_url = match.group(1)
+                    local_media_path = await self._download_media(img_url, platform.name)
+
+            new_post = Post(
+                name=entry.title,
+                text=original_content,
+                source_url=entry.link,
+                created_at=created_at,
+                post_type=p_type,
+                platform_id=platform.id,
+                media_path=local_media_path
+            )
+            
+            self.db.add(new_post)
+            new_posts_count += 1
+
+        if new_posts_count > 0:
+            self.db.commit()
+            logger.info(f"Added {new_posts_count} new posts for {platform.name} ({platform.platform_type})")
 
     async def process_active_configs(self):
         """Główna pętla wywoływana przez scheduler."""
@@ -144,5 +283,30 @@ class ScraperService:
         self.db.commit()
 
     async def _process_generic_rss(self, platform: Platform, config: ScraperConfig):
-        # Podobna logika do TikToka, ale bez Live checka
-        pass
+        """Obsługa YouTube, Instagram i X przez RSS Bridge."""
+        # Mapowanie platform na parametry RSS Bridge
+        bridge_params = {
+            PlatformType.YouTube: f"action=display&bridge=YouTubeBridge&context=By+User&user={platform.name}&format=Atom",
+            PlatformType.Instagram: f"action=display&bridge=InstagramBridge&context=Username&u={platform.name}&format=Atom",
+            PlatformType.X: f"action=display&bridge=TwitterBridge&context=By+username&u={platform.name}&format=Atom",
+        }
+
+        query_string = bridge_params.get(platform.platform_type)
+        if not query_string:
+            logger.warning(f"No bridge config for platform type: {platform.platform_type}")
+            return
+
+        rss_url = f"http://localhost:3000/?{query_string}"
+        
+        # Domyślne typy dla platform
+        default_types = {
+            PlatformType.YouTube: PostType.Video,
+            PlatformType.Instagram: PostType.Post,
+            PlatformType.X: PostType.Text
+        }
+
+        try:
+            rss_response = await self._fetch_rss(rss_url, config)
+            await self._process_rss_feed(rss_response.text, platform, default_types.get(platform.platform_type, PostType.Post))
+        except Exception as e:
+            logger.error(f"Error processing generic RSS for {platform.name}: {e}")

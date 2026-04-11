@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -10,11 +11,23 @@ from app.api.deps import db_session, redis_client
 from common_lib.logger.logger import setup_logging
 from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
-#from app.api.routers import 
+
+from contextlib import asynccontextmanager
+from app.core.scheduler import start_scheduler, scheduler
+
+from app.api.routers import posts, scraper
 
 setup_logging(json_logs=False, log_level="INFO")
 
-app = FastAPI( title=settings.APP_NAME, root_path="/api")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start schedulera przy starcie apki
+    start_scheduler()
+    yield
+    # Zatrzymanie przy wyłączaniu apki
+    scheduler.shutdown()
+
+app = FastAPI( title=settings.APP_NAME, root_path="/api", lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -22,7 +35,11 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(StructlogMiddleware)
 
-### app.include_router(users.router)
+# Serwowanie pobranych mediów (filmy i zdjęcia)
+app.mount("/media", StaticFiles(directory="/mnt/storage/media"), name="media")
+
+app.include_router(posts.router)
+app.include_router(scraper.router)
 
 
 origins = [
