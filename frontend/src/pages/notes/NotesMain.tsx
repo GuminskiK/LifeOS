@@ -155,7 +155,7 @@ export const NotesMain: React.FC = () => {
   return (
     <Group orientation="horizontal" className="bg-white w-full h-full rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       
-      <Panel defaultSize={20} minSize={15} maxSize={85} className="border-r border-gray-200 bg-gray-50 flex flex-col">
+      <Panel defaultSize={20} minSize={15} maxSize={500} className="border-r border-gray-200 bg-gray-50 flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <button onClick={handleCreateNote} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors shadow-sm">
             <Plus size={20} />

@@ -20,7 +20,7 @@ setup_logging(json_logs=False, log_level="INFO")
 async def lifespan(app: FastAPI):
     from sqlmodel import SQLModel
     from app.api.deps import db_deps
-    from app.models import Category, Goal, Reward, RewardTransaction, Streak, Task, Vault
+    from app.models import Categories, Goals, Rewards, RewardTransaction, Streak, Tasks, Vault
     try:
         engine = db_deps.get_engine()
         async with engine.begin() as conn:
