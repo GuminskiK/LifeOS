@@ -10,7 +10,7 @@ from app.api.deps import db_session, redis_client
 from common_lib.logger.logger import setup_logging
 from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
-from app.api.routers import srs, folders, notes
+from app.api.routers import srs, folders, notes, flashcards, flashnotes
 
 from contextlib import asynccontextmanager
 
@@ -42,6 +42,8 @@ app.add_middleware(StructlogMiddleware)
 app.include_router(srs.router, prefix="/srs", tags=["SRS"])
 app.include_router(folders.router, prefix="/folders", tags=["Folders"])
 app.include_router(notes.router, prefix="/notes", tags=["Notes"])
+app.include_router(flashcards.router, prefix="/flashcards", tags=["FlashCards"])
+app.include_router(flashnotes.router, prefix="/flashnotes", tags=["FlashNotes"])
 
 
 origins = [

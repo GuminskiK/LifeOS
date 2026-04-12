@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import { LifeOSEditor } from '../../components/editor/LifeOSEditor';
-import { Save, Plus, FileText, Search, Folder as FolderIcon, FolderOpen, MoreVertical, Loader2, Trash2 } from 'lucide-react';
+import { Save, Plus, FileText, Search, Folder as FolderIcon, FolderOpen, MoreVertical, Loader2, Trash2, BrainCircuit } from 'lucide-react';
 import * as api from '../../api/notesApi';
 import { Note, Folder } from '../../api/notesApi';
 
@@ -120,6 +120,20 @@ export const NotesMain: React.FC = () => {
     }
   };
 
+  const handleAddToFlashNotes = async () => {
+    if (!activeNote) return;
+    try {
+      await api.createFlashNote({
+        name: noteName,
+        note_id: activeNote.id,
+        is_active: true
+      });
+      alert('Dodano do FlashNotes pomyślnie!');
+    } catch {
+      alert('Błąd podczas dodawania do FlashNotes.');
+    }
+  };
+
   const handleSaveNote = async () => {
     if (!activeNote) return;
     setIsSaving(true);
@@ -208,6 +222,13 @@ export const NotesMain: React.FC = () => {
                 placeholder="Tytuł notatki..."
               />
               <div className="flex items-center gap-2 px-1">
+                <button 
+                  onClick={handleAddToFlashNotes}
+                  className="flex items-center justify-center p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-200"
+                  title="Dodaj jako FlashNote do powtórek"
+                >
+                  <BrainCircuit size={18} />
+                </button>
                 <button 
                   onClick={handleDeleteNote}
                   className="flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"

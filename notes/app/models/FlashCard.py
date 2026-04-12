@@ -23,11 +23,16 @@ class FlashCard(FlashCardBase, table=True):
 
 
 class FlashCardCreate(FlashCardBase):
-    pass
+    is_active: bool = True
 
 
 class FlashCardRead(FlashCardBase):
-    pass
+    id: int
+    is_active: bool
+    next_review: datetime
+    interval: int
+    easiness_factor: float
+    repetitions: int
 
 
 class FlashCardUpdate(SQLModel):

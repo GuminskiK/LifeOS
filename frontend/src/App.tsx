@@ -6,6 +6,7 @@ import { ActivateAccount } from './pages/auth/ActivateAccount';
 import { TwoFactorSetup } from './pages/auth/TwoFactorSetup';
 import { Settings } from './pages/settings/Settings';
 import { NotesMain } from './pages/notes/NotesMain';
+import { FlashcardsMain } from './pages/notes/FlashcardsMain';
 
 // Prosty element zabezpieczający trasowanie (wymagany LocalStorage Token)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -27,6 +28,7 @@ const App = () => {
           <Route index element={<div className="font-bold text-3xl text-gray-800">Witaj w Dashboardzie LifeOS!</div>} />
           
           <Route path="notes" element={<NotesMain />} />
+          <Route path="flashcards" element={<FlashcardsMain />} />
           <Route path="tasks" element={<div className="text-2xl text-gray-600">Baza Twojego poziomu trudności i celi życiowych (Strefa dla Tasks)</div>} />
           <Route path="workouts" element={<div className="text-2xl text-gray-600">Sesje workoutowe na żywo (Strefa dla Workout)</div>} />
           <Route path="social" element={<div className="text-2xl text-gray-600">Agregator kanałów i nowości (Strefa dla SocialMediaAggregator)</div>} />

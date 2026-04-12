@@ -1,11 +1,12 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
-import { LayoutDashboard, BookText, CheckSquare, Dumbbell, Activity, LogOut, Settings as SettingsIcon } from "lucide-react";
+import { LayoutDashboard, BookText, CheckSquare, Dumbbell, Activity, LogOut, Settings as SettingsIcon, BrainCircuit } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
   const menuItems = [
     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={20} /> },
     { name: "Notes", path: "/notes", icon: <BookText size={20} /> },
+    { name: "Fiszki", path: "/flashcards", icon: <BrainCircuit size={20} /> },
     { name: "Tasks", path: "/tasks", icon: <CheckSquare size={20} /> },
     { name: "Workouts", path: "/workouts", icon: <Dumbbell size={20} /> },
     { name: "Social Media", path: "/social", icon: <Activity size={20} /> },

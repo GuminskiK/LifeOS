@@ -27,11 +27,16 @@ class FlashNote(FlashNoteBase, table=True):
 
 
 class FlashNoteCreate(FlashNoteBase):
-    pass
+    is_active: bool = True
 
 
 class FlashNoteRead(FlashNoteBase):
-    pass
+    id: int
+    is_active: bool
+    next_review: datetime
+    interval: int
+    easiness_factor: float
+    repetitions: int
 
 
 class FlashNoteUpdate(SQLModel):
