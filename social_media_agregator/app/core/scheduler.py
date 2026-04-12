@@ -1,6 +1,6 @@
 import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.api.deps import db_session
+from app.api.deps import db_deps
 from app.services.scraper_service import ScraperService
 
 logger = logging.getLogger(__name__)
@@ -10,7 +10,7 @@ scheduler = AsyncIOScheduler()
 async def run_scraper_task():
     """Zadanie opakowujące cykl scrapowania w sesję bazy danych."""
     logger.info("Starting scheduled scraper check...")
-    async for session in db_session():
+    async for session in db_deps.get_session():
         service = ScraperService(session)
         try:
             await service.process_active_configs()

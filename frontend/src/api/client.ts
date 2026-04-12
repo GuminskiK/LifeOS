@@ -18,6 +18,24 @@ const addTokenToRequest = (config: InternalAxiosRequestConfig): InternalAxiosReq
 // Dodajemy interceptory aby upewnić się, że token JWT (kiedy będzie zaimplementowany) pojawia się w zapytaniach
 [authApi, notesApi, tasksApi, workoutApi, smaApi].forEach((apiInstance) => {
   apiInstance.interceptors.request.use(addTokenToRequest);
+  
+  // Dodatkowy interceptor dla logowania błędów połączenia (przydatne przy mikroserwisach)
+  apiInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Clear token on 401 Unauthorized and redirect (only if not already on login page)
+        localStorage.removeItem('token');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+      if (!error.response) {
+        console.warn(`Błąd połączenia z serwisem: ${apiInstance.defaults.baseURL}. Czy mikroserwis jest włączony?`);
+      }
+      return Promise.reject(error);
+    }
+  );
 });
 
 export default {

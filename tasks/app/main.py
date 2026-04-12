@@ -12,9 +12,25 @@ from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
 from app.api.routers import categories, goals, reward_transactions, rewards, streaks, tasks, vault
 
+from contextlib import asynccontextmanager
+
 setup_logging(json_logs=False, log_level="INFO")
 
-app = FastAPI( title=settings.APP_NAME, root_path="/api")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from sqlmodel import SQLModel
+    from app.api.deps import db_deps
+    from app.models import Category, Goal, Reward, RewardTransaction, Streak, Task, Vault
+    try:
+        engine = db_deps.get_engine()
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+            print("Successfully initialized missing tables in lifeos_tasks!")
+    except Exception as e:
+        print(f"Skipping DB initialization, likely not reachable: {e}")
+    yield
+
+app = FastAPI(lifespan=lifespan, title=settings.APP_NAME, root_path="/api")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -35,6 +51,8 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5173",
+    "http://localhost:5174",
 ]
 
 app.add_middleware(

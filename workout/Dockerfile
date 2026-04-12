@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY common/requirements.txt common_requirements.txt
-RUN pip install --no-cache-dir -r common_requirements.txt || true
+
+
 COPY common common
 RUN cd common && pip install --no-cache-dir -e .
 

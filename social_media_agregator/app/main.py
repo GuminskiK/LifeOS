@@ -22,6 +22,17 @@ setup_logging(json_logs=False, log_level="INFO")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from sqlmodel import SQLModel
+    from app.api.deps import db_deps
+    from app.models import Post
+    try:
+        engine = db_deps.get_engine()
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+            print("Successfully initialized missing tables in lifeos_social_media!")
+    except Exception as e:
+        print(f"Skipping DB initialization, likely not reachable: {e}")
+    
     # Start schedulera przy starcie apki
     start_scheduler()
     yield
@@ -49,6 +60,8 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5173",
+    "http://localhost:5174",
 ]
 
 app.add_middleware(

@@ -137,7 +137,7 @@ class WorkoutSessionService:
         if db_ws.status == WorkoutSessionStatus.COMPLETED:
              raise BadRequestException("Sesja jest już zakończona.")
 
-        db_ws.end_time = datetime.now(timezone.utc)
+        db_ws.end_time = datetime.now(timezone.utc).replace(tzinfo=None)
         db_ws.status = WorkoutSessionStatus.COMPLETED
         session.add(db_ws)
         

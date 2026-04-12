@@ -16,7 +16,7 @@ class FlashCard(FlashCardBase, table=True):
     is_active: bool = Field(default=False)
 
     # SRS Fields
-    next_review: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    next_review: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     interval: int = Field(default=0)  # Days
     easiness_factor: float = Field(default=2.5)
     repetitions: int = Field(default=0)

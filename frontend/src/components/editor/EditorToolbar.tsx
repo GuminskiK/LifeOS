@@ -2,7 +2,7 @@ import React from 'react';
 import { Editor } from '@tiptap/react';
 import { 
   Bold, Italic, Strikethrough, Table as TableIcon, Image as ImageIcon, 
-  Video, AlignLeft, AlignCenter, AlignRight, Link2, Plus, ArrowLeftRight
+  Video, AlignLeft, AlignCenter, AlignRight, Link2, Plus, ArrowLeftRight, Settings
 } from 'lucide-react';
 
 interface Props {
@@ -21,9 +21,12 @@ export const EditorToolbar: React.FC<Props> = ({ editor }) => {
     }
   };
 
+  const setImgWidth = (sz: string) => {
+      editor.chain().focus().updateAttributes('image', { width: sz }).run();
+  };
+
   const addYoutube = () => {
     const url = window.prompt('URL YouTube:');
-    // regex do wyciągnięcia samego wideo o ile potrzeba, tiptap-youtube wbudowanie to ogarnia
     if (url) {
       editor.commands.setYoutubeVideo({
         src: url,
@@ -34,25 +37,21 @@ export const EditorToolbar: React.FC<Props> = ({ editor }) => {
   };
 
   const createTable = () => {
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run(); // Tabela bez nagłówków w założeniach (opcja)
+    editor.chain().focus().insertTable({ rows: 1, cols: 2, withHeaderRow: false }).run(); 
   };
 
-  const centerImage = () => {
-    if (editor.isActive('image')) {
-      const isCentered = editor.getAttributes('image').align === 'center';
-      editor.chain().focus().updateAttributes('image', { align: isCentered ? 'left' : 'center' }).run();
-    } else if (editor.isActive('table')) {
-      const isCentered = editor.getAttributes('table').align === 'center';
-      editor.chain().focus().updateAttributes('table', { align: isCentered ? 'left' : 'center' }).run();
-    }
-  };
-
-  const dualLayoutImage = () => {
-    if (editor.isActive('image')) {
-        const isDual = editor.getAttributes('image').layout === 'dual';
-        editor.chain().focus().updateAttributes('image', { layout: isDual ? 'single' : 'dual' }).run();
-    }
+  const alignItemLeft = () => {
+     if (editor.isActive('table')) { editor.chain().focus().updateAttributes('table', { align: 'left' }).run(); }
+     else editor.chain().focus().setTextAlign('left').run();
   }
+  const alignItemCenter = () => {
+     if (editor.isActive('table')) { editor.chain().focus().updateAttributes('table', { align: 'center' }).run(); }
+     else editor.chain().focus().setTextAlign('center').run();
+  }
+  const alignItemRight = () => {
+     if (editor.isActive('table')) { editor.chain().focus().updateAttributes('table', { align: 'right' }).run(); }
+     else editor.chain().focus().setTextAlign('right').run();
+  };
 
   return (
     <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 flex-wrap shrink-0 rounded-t-lg">
@@ -67,13 +66,17 @@ export const EditorToolbar: React.FC<Props> = ({ editor }) => {
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
 
-      <button onClick={() => editor.chain().focus().setTextAlign('left').run()}
-        className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200 text-blue-600' : 'text-gray-600'}`} title="Do lewej">
+      <button onClick={alignItemLeft}
+        className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'left' }) || editor.isActive('table', { align: 'left' }) ? 'bg-gray-200 text-blue-600' : 'text-gray-600'}`} title="Do lewej">
         <AlignLeft size={18} />
       </button>
-      <button onClick={() => editor.chain().focus().setTextAlign('center').run()}
-        className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200 text-blue-600' : 'text-gray-600'}`} title="Wyśrodkuj tekst">
+      <button onClick={alignItemCenter}
+        className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'center' }) || editor.isActive('table', { align: 'center' }) ? 'bg-gray-200 text-blue-600' : 'text-gray-600'}`} title="Wyśrodkuj">
         <AlignCenter size={18} />
+      </button>
+      <button onClick={alignItemRight}
+        className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'right' }) || editor.isActive('table', { align: 'right' }) ? 'bg-gray-200 text-blue-600' : 'text-gray-600'}`} title="Do prawej">
+        <AlignRight size={18} />
       </button>
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
@@ -81,21 +84,30 @@ export const EditorToolbar: React.FC<Props> = ({ editor }) => {
       <button onClick={createTable} className="p-1.5 rounded hover:bg-gray-200 text-gray-600" title="Tabela">
         <TableIcon size={18} />
       </button>
-      <button onClick={() => editor.chain().focus().toggleHeaderRow().run()} className="p-1.5 rounded hover:bg-gray-200 text-gray-600 text-xs font-bold" title="Przełącz nagłówek tabeli">
-        TH
-      </button>
+      
+      {editor.isActive('table') && (
+        <div className="flex items-center bg-blue-50 border border-blue-200 rounded px-1 ml-1 scale-90">
+             <button onClick={() => editor.chain().focus().addColumnBefore().run()} className="p-1 text-xs text-blue-600 font-bold hover:bg-blue-100" title="Dodaj kolumnę">+Kol</button>
+             <button onClick={() => editor.chain().focus().addRowAfter().run()} className="p-1 text-xs text-blue-600 font-bold hover:bg-blue-100" title="Dodaj wiersz">+Wiersz</button>
+             <button onClick={() => editor.chain().focus().deleteColumn().run()} className="p-1 text-xs text-red-500 font-bold hover:bg-red-100" title="Usuń kolumnę">-Kol</button>
+             <button onClick={() => editor.chain().focus().deleteRow().run()} className="p-1 text-xs text-red-500 font-bold hover:bg-red-100" title="Usuń wiersz">-Wiersz</button>
+             <button onClick={() => editor.chain().focus().deleteTable().run()} className="p-1 text-xs text-red-600 font-bold hover:bg-red-50 ml-2" title="Wyrzuć całą tabelę">Usuń tab.</button>
+        </div>
+      )}
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
 
       <button onClick={addImage} className="p-1.5 rounded hover:bg-gray-200 text-gray-600" title="Dodaj zdjęcie">
         <ImageIcon size={18} />
       </button>
-      <button onClick={centerImage} disabled={!editor.isActive('image') && !editor.isActive('table')} className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive('image') || editor.isActive('table') ? 'text-gray-600' : 'text-gray-300'}`} title="Wyśrodkuj obiekt (Obraz/Tabela)">
-        <AlignCenter size={18} />
-      </button>
-      <button onClick={dualLayoutImage} disabled={!editor.isActive('image')} className={`p-1.5 rounded hover:bg-gray-200 ${editor.isActive('image') ? 'text-gray-600' : 'text-gray-300'}`} title="Dwa obrazki obok siebie">
-        <ArrowLeftRight size={18} />
-      </button>
+      
+      {editor.isActive('image') && (
+        <div className="flex bg-gray-100 rounded px-1 scale-90 border border-gray-300">
+           <button onClick={() => setImgWidth('25%')} className="p-1 text-xs font-semibold hover:bg-gray-200" title="25% szerokości">S</button>
+           <button onClick={() => setImgWidth('50%')} className="p-1 text-xs font-semibold hover:bg-gray-200" title="50% szerokości">M</button>
+           <button onClick={() => setImgWidth('100%')} className="p-1 text-xs font-semibold hover:bg-gray-200" title="100% szerokości">L</button>
+        </div>
+      )}
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
 

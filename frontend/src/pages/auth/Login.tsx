@@ -4,7 +4,7 @@ import { Lock, Mail, Unlock, User, ShieldAlert } from 'lucide-react';
 import { authApi } from '../../api/client';
 
 export const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const [requires2FA, setRequires2FA] = useState(false);
@@ -21,9 +21,9 @@ export const Login: React.FC = () => {
       // Dla /auth/token z reguły to "application/x-www-form-urlencoded" albo json
       // zależy od pod spodem OAuth2 configu
       const payload = {
-        username: email,
+        username: username,
         password: password,
-        ...(requires2FA && totpCode ? { totp_code: totpCode } : {}),
+        ...(requires2FA && totpCode ? { mfa_code: totpCode } : {}),
       };
 
       const response = await authApi.post('/auth/token', payload, {
@@ -68,14 +68,14 @@ export const Login: React.FC = () => {
 
           <div className="rounded-md shadow-sm space-y-4">
             <div className="relative">
-              <Mail className="absolute text-gray-400 left-3 top-3" size={20} />
+              <User className="absolute text-gray-400 left-3 top-3" size={20} />
               <input
-                type="email"
+                type="text"
                 required
                 className="appearance-none rounded-lg relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Adres e-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nazwa użytkownika"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={loading || requires2FA}
               />
             </div>

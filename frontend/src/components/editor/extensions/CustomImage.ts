@@ -1,7 +1,15 @@
 import { mergeAttributes } from '@tiptap/core';
 import Image from '@tiptap/extension-image';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { ImageNodeView } from './ImageNodeView';
 
 export const CustomImage = Image.extend({
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      inline: true,
+    } as any; 
+  },
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -13,14 +21,16 @@ export const CustomImage = Image.extend({
           return { 'data-align': attributes.align };
         },
       },
-      layout: {
-        default: 'single',
-        parseHTML: element => element.getAttribute('data-layout') || 'single',
+      width: {
+        default: '100%',
+        parseHTML: element => element.getAttribute('data-width') || '100%',
         renderHTML: attributes => {
-          if (attributes.layout === 'single') return {};
-          return { 'data-layout': attributes.layout };
+          return { 'data-width': attributes.width, style: `width: ${attributes.width}` };
         }
       }
     };
   },
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView);
+  }
 });

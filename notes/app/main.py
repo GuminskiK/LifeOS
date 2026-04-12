@@ -12,9 +12,26 @@ from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
 from app.api.routers import srs, folders, notes
 
+from contextlib import asynccontextmanager
+
 setup_logging(json_logs=False, log_level="INFO")
 
-app = FastAPI(title=settings.APP_NAME, root_path="/api")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from sqlmodel import SQLModel
+    from app.api.deps import db_deps
+    # Ensure models are loaded
+    from app.models import Folder, Note, NoteLink, FlashNote, FlashCard, Media
+    try:
+        engine = db_deps.get_engine()
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+            print("Successfully initialized missing tables in lifeos_notes!")
+    except Exception as e:
+        print(f"Skipping DB initialization, likely not reachable: {e}")
+    yield
+
+app = FastAPI(lifespan=lifespan, title=settings.APP_NAME, root_path="/api")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -22,9 +39,9 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(StructlogMiddleware)
 
-app.include_router(srs.router)
-app.include_router(folders.router)
-app.include_router(notes.router)
+app.include_router(srs.router, prefix="/srs", tags=["SRS"])
+app.include_router(folders.router, prefix="/folders", tags=["Folders"])
+app.include_router(notes.router, prefix="/notes", tags=["Notes"])
 
 
 origins = [
@@ -33,6 +50,7 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:5173",
+    "http://localhost:5174",
     "http://localhost:3000",
 ]
 

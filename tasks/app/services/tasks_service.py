@@ -36,7 +36,7 @@ async def get_task_forecast(session: db_session, user_id: int, start: datetime, 
 async def sync_habits(session: db_session, user_id: int):
     """Resetuje streaki dla habitów, które nie zostały wykonane w terminie."""
     tasks = await fetch_user_tasks(session, user_id)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None)
 
     for task in tasks:
         if task.type.value == "habit" and task.recurrence and task.start_date:
@@ -71,7 +71,7 @@ async def task_done (session: db_session, task_id: int, user_id: int):
         try: # type: ignore
             dtstart = db_task.start_date.replace(tzinfo=None) if db_task.start_date and db_task.start_date.tzinfo else db_task.start_date
             rule = rrulestr(db_task.recurrence, dtstart=dtstart)
-            next_date = rule.after(datetime.now(timezone.utc).replace(tzinfo=None))
+            next_date = rule.after(datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None))
             if next_date and db_task.start_date:
                 diff = next_date - db_task.start_date
                 db_task.start_date = next_date

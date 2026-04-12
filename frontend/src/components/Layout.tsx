@@ -7,7 +7,7 @@ export const Layout: React.FC = () => {
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <main className="flex-1 ml-64 overflow-y-auto">
-        <div className="p-8 max-w-7xl mx-auto text-gray-800">
+        <div className="p-4 md:p-8 w-full h-full text-gray-800">
           <Outlet />
         </div>
       </main>

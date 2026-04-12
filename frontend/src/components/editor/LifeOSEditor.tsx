@@ -23,7 +23,12 @@ interface LifeOSEditorProps {
 export const LifeOSEditor: React.FC<LifeOSEditorProps> = ({ content, onChange }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        link: { // Konfiguracja linku wewnątrz StarterKit
+          openOnClick: false,
+          HTMLAttributes: { class: 'my-link-class' },
+        }
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -37,9 +42,6 @@ export const LifeOSEditor: React.FC<LifeOSEditorProps> = ({ content, onChange })
       Youtube.configure({
         inline: false,
       }),
-      Link.configure({
-        openOnClick: false,
-      }),
       NoteLink,
     ],
     content,
@@ -48,7 +50,28 @@ export const LifeOSEditor: React.FC<LifeOSEditorProps> = ({ content, onChange })
     },
     editorProps: {
       attributes: {
-        class: 'prose max-w-none focus:outline-none min-h-[400px] p-6',
+        class: 'prose max-w-none focus:outline-none min-h-full h-full p-6 pb-64',
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            event.preventDefault();
+            // TODO: w przyszłości podpięcie pod upload na S3/backend. Na teraz wstawiamy data-url
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const src = e.target?.result as string;
+              const { schema } = view.state;
+              const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+              const node = schema.nodes.image.create({ src });
+              const transaction = view.state.tr.insert(coordinates?.pos || 0, node);
+              view.dispatch(transaction);
+            };
+            reader.readAsDataURL(file);
+            return true;
+          }
+        }
+        return false;
       },
     },
   });

@@ -34,7 +34,7 @@ async def get_current_active_user(
                 token,
                 settings.SECRET_KEY,
                 algorithms=[settings.ALGORITHM],
-                audience=settings.APP_NAME + "-api",
+                audience="LifeOS-api",
             )
             username: str = payload.get("sub")
             if username is None:

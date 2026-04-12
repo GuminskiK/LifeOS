@@ -39,5 +39,5 @@ class SRSService:
             "interval": 0,
             "repetitions": 0,
             "easiness_factor": 2.5,
-            "next_review": datetime.now(timezone.utc),
+            "next_review": datetime.now(timezone.utc).replace(tzinfo=None),
         }

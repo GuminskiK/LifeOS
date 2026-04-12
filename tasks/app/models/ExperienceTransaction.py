@@ -9,7 +9,7 @@ class ExperienceTransaction(SQLModel, table=True):
     
     task_name: str
     amount: int
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class ExperienceTransactionCreate(SQLModel):
     category_id: Optional[int] = Field(default=None)

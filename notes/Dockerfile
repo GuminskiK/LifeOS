@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY common/requirements.txt common_requirements.txt
-RUN pip install --no-cache-dir -r common_requirements.txt || true
+
+
 COPY common common
 RUN cd common && pip install --no-cache-dir -e .
 
@@ -25,7 +25,7 @@ COPY --from=builder /opt/venv /opt/venv
 # Weasyprint requires multiple libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo zlib1g \
-    libpango-1.0-0 libpangoft2-1.0-0 libcairo2 libgdk-pixbuf2.0-0 shared-mime-info \
+    libpango-1.0-0 libpangoft2-1.0-0 libcairo2 libgdk-pixbuf-xlib-2.0-0 shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/venv/bin:$PATH"

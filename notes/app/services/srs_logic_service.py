@@ -8,7 +8,7 @@ from app.services.SRS_service import SRSService
 
 async def fetch_due_cards(session: db_session, owner_id: int):
     """Pobiera wszystkie fiszki i notatki-fiszki do powtórki na dziś."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     # Pobieramy FlashCards
     fc_stmt = select(FlashCard).where(
@@ -72,7 +72,7 @@ async def process_review_result(
     item.interval = new_interval
     item.repetitions = new_reps
     item.easiness_factor = new_ef
-    item.next_review = datetime.now(timezone.utc) + timedelta(days=new_interval)
+    item.next_review = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=new_interval)
 
     session.add(item)
     await session.commit()

@@ -6,7 +6,7 @@ from app.services.goal_service import goal_update, goal_downgrade
 from datetime import datetime, timezone # type: ignore
 
 def is_streak_broken(streak: Streak) -> bool:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     # Prosta logika: jeśli minęło więcej niż 2 jednostki czasu (np. 2 dni dla DAY), streak przepada
     delta = now - streak.last_length_update.replace(tzinfo=timezone.utc)
     
@@ -26,14 +26,14 @@ async def add_occurance(session: db_session, streak_id: int, owner_id: int):
     if is_streak_broken(db_streak):
         db_streak.length = 0
         db_streak.counter = 0
-        db_streak.last_length_update = datetime.now(timezone.utc)
+        db_streak.last_length_update = datetime.now(timezone.utc).replace(tzinfo=None)
 
     db_streak.counter += 1
 
     if db_streak.occurance_per_length == db_streak.counter:
         db_streak.length += 1
         db_streak.counter = 0
-        db_streak.last_length_update = datetime.now(timezone.utc)
+        db_streak.last_length_update = datetime.now(timezone.utc).replace(tzinfo=None)
 
         # Aktualizacja PR (Personal Record)
         if db_streak.length > db_streak.max_length:
