@@ -66,6 +66,8 @@ export interface FlashCard {
   next_review?: string;
   interval?: number;
   repetitions?: number;
+  easiness_factor?: number;
+  group_id?: number | null;
 }
 
 export const fetchFlashCards = async (): Promise<FlashCard[]> => {
@@ -96,6 +98,8 @@ export interface FlashNote {
   next_review?: string;
   interval?: number;
   repetitions?: number;
+  easiness_factor?: number;
+  group_id?: number | null;
 }
 
 export const fetchFlashNotes = async (): Promise<FlashNote[]> => {
@@ -118,14 +122,49 @@ export const deleteFlashNote = async (id: number): Promise<void> => {
 };
 
 // SRS API
-export const getDueItems = async (): Promise<any[]> => {
-  const { data } = await notesApi.get('/srs/due');
+export interface FlashGroup {
+  id: number;
+  name: string;
+  group_type: 'card' | 'note';
+  parent_id: number | null;
+  owner_id: number;
+}
+export const getFlashGroups = async () => {
+  const { data } = await notesApi.get('/flashgroups/');
+  return data;
+};
+export const createFlashGroup = async (group: Partial<FlashGroup>) => {
+  const { data } = await notesApi.post('/flashgroups/', group);
+  return data;
+};
+export const updateFlashGroup = async (id: number, group: Partial<FlashGroup>) => {
+  const { data } = await notesApi.patch('/flashgroups/' + id, group);
+  return data;
+};
+export const deleteFlashGroup = async (id: number) => {
+  const { data } = await notesApi.delete('/flashgroups/' + id);
+  return data;
+};
+export const getDifficultCards = async (limit: number = 20, group_ids?: number[]) => {
+  let url = '/srs/difficult?limit=' + limit;
+  if (group_ids && group_ids.length > 0) {
+    group_ids.forEach(id => url += '&group_ids=' + id);
+  }
+  const { data } = await notesApi.get(url);
+  return data;
+};
+export const getDueItems = async (group_ids?: number[]): Promise<any[]> => {
+  let url = '/srs/due';
+  if (group_ids && group_ids.length > 0) {
+    url += '?';
+    group_ids.forEach((id, i) => url += (i > 0 ? '&' : '') + 'group_ids=' + id);
+  }
+  const { data } = await notesApi.get(url);
   const cards = (data.flash_cards || []).map((c: any) => ({...c, item_type: 'card'}));
   const notes = (data.flash_notes || []).map((n: any) => ({...n, item_type: 'note'}));
   return [...cards, ...notes];
-};
-
-export const submitReview = async (item_id: number, item_type: 'card' | 'note', quality: number): Promise<any> => {
+};export const submitReview = async (item_id: number, item_type: 'card' | 'note', quality: number): Promise<any> => {
   const { data } = await notesApi.post(`/srs/review?item_id=` + item_id + `&item_type=` + item_type + `&quality=` + quality);
   return data;
 };
+

@@ -8,6 +8,7 @@ class FlashCardBase(SQLModel):
     name: str
     front: Optional[dict] = Field(default=None, sa_type=JSON)
     reverse: Optional[dict] = Field(default=None, sa_type=JSON)
+    group_id: Optional[int] = Field(default=None, foreign_key="flashgroup.id")
 
 
 class FlashCard(FlashCardBase, table=True):

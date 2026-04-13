@@ -6,7 +6,12 @@ from app.models.FlashNote import FlashNote
 from app.services.SRS_service import SRSService
 
 
-async def fetch_due_cards(session: db_session, owner_id: int):
+from sqlalchemy import func
+from typing import List, Optional
+
+async def fetch_due_cards(
+    session: db_session, owner_id: int, group_ids: Optional[List[int]] = None
+):
     """Pobiera wszystkie fiszki i notatki-fiszki do powtórki na dziś."""
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
@@ -16,6 +21,9 @@ async def fetch_due_cards(session: db_session, owner_id: int):
         FlashCard.is_active,
         FlashCard.next_review <= now,
     )
+    if group_ids:
+        fc_stmt = fc_stmt.where(FlashCard.group_id.in_(group_ids))
+        
     cards = (await session.exec(fc_stmt)).all()
 
     # Pobieramy FlashNotes
@@ -24,24 +32,30 @@ async def fetch_due_cards(session: db_session, owner_id: int):
         FlashNote.is_active,
         FlashNote.next_review <= now,
     )
+    if group_ids:
+        fn_stmt = fn_stmt.where(FlashNote.group_id.in_(group_ids))
+        
     notes = (await session.exec(fn_stmt)).all()
 
     return {"flash_cards": cards, "flash_notes": notes}
 
 
 async def fetch_new_and_difficult_cards(
-    session: db_session, owner_id: int, limit: int = 20
+    session: db_session, owner_id: int, limit: int = 20, group_ids: Optional[List[int]] = None
 ):
     """Pobiera nowe (repetitions=0) oraz trudne (easiness_factor < 2.0) fiszki."""
     stmt = (
         select(FlashCard)
         .where(
             FlashCard.owner_id == owner_id,
+            FlashCard.is_active,
             or_(FlashCard.repetitions == 0, FlashCard.easiness_factor < 2.0),
         )
-        .limit(limit)
     )
-
+    if group_ids:
+        stmt = stmt.where(FlashCard.group_id.in_(group_ids))
+        
+    stmt = stmt.limit(limit)
     return (await session.exec(stmt)).all()
 
 

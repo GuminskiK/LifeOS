@@ -8,8 +8,8 @@ if TYPE_CHECKING:
 
 class FlashNoteBase(SQLModel):
     name: str
-
     note_id: Optional[int] = Field(default=None, foreign_key="note.id")
+    group_id: Optional[int] = Field(default=None, foreign_key="flashgroup.id")
 
 
 class FlashNote(FlashNoteBase, table=True):

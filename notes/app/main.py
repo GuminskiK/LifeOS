@@ -10,7 +10,7 @@ from app.api.deps import db_session, redis_client
 from common_lib.logger.logger import setup_logging
 from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
-from app.api.routers import srs, folders, notes, flashcards, flashnotes
+from app.api.routers import srs, folders, notes, flashcards, flashnotes, flashgroups
 
 from contextlib import asynccontextmanager
 
@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     from sqlmodel import SQLModel
     from app.api.deps import db_deps
     # Ensure models are loaded
-    from app.models import Folder, Note, NoteLink, FlashNote, FlashCard, Media
+    from app.models import Folder, Note, NoteLink, FlashNote, FlashCard, Media, FlashGroup
     try:
         engine = db_deps.get_engine()
         async with engine.begin() as conn:
@@ -44,6 +44,7 @@ app.include_router(folders.router, prefix="/folders", tags=["Folders"])
 app.include_router(notes.router, prefix="/notes", tags=["Notes"])
 app.include_router(flashcards.router, prefix="/flashcards", tags=["FlashCards"])
 app.include_router(flashnotes.router, prefix="/flashnotes", tags=["FlashNotes"])
+app.include_router(flashgroups.router, prefix="/flashgroups", tags=["FlashGroups"])
 
 
 origins = [

@@ -8,20 +8,25 @@ router = APIRouter()
 
 
 @router.get("/due")
-async def get_due_items(session: db_session, owner: current_active_user):
+async def get_due_items(
+    session: db_session, 
+    owner: current_active_user,
+    group_ids: List[int] = Query(None, description="Lista ID grup do przefiltrowania")
+):
     """Zwraca listę wszystkich fiszek i notatek zaplanowanych na dziś."""
-    return await srs_logic_service.fetch_due_cards(session, owner.id)
+    return await srs_logic_service.fetch_due_cards(session, owner.id, group_ids)
 
 
 @router.get("/difficult", response_model=List[FlashCardRead])
 async def get_difficult_cards(
     session: db_session,
     owner: current_active_user,
+    group_ids: List[int] = Query(None, description="Lista ID grup do przefiltrowania"),
     limit: int = Query(20, ge=1, le=100),
 ):
     """Pobiera nowe oraz najtrudniejsze fiszki (niski Easiness Factor)."""
     return await srs_logic_service.fetch_new_and_difficult_cards(
-        session, owner.id, limit
+        session, owner.id, limit, group_ids
     )
 
 
