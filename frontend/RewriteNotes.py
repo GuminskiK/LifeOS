@@ -1,81 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Panel, Group, Separator } from 'react-resizable-panels';
-import { LifeOSEditor } from '../../components/editor/LifeOSEditor';
-import { Save, Plus, FileText, Search, Folder as FolderIcon, FolderOpen, MoreVertical, Loader2, Trash2, X } from 'lucide-react';
-import * as api from '../../api/notesApi';
-import { Note, Folder } from '../../api/notesApi';
+import re
 
-const FolderTree: React.FC<{ 
-  folderId: number | null; 
-  folders: Folder[]; 
-  notes: Note[]; 
-  activeNoteIds: number[];
-  onSelectNote: (note: Note) => void;
-}> = ({ folderId, folders, notes, activeNoteIds, onSelectNote }) => {
-  const [isOpen, setIsOpen] = useState(folderId === null);
-  const childFolders = folders.filter(f => f.parent_id === folderId);
-  const childNotes = notes.filter(n => n.folder_id === folderId);
+file_path = r'C:\Users\krzys\Documents\VSCrepos\LifeOS\frontend\src\pages\notes\NotesMain.tsx'
 
-  if (folderId === null) {
-    return (
-      <div className="space-y-0.5">
-        {childFolders.map(f => (
-          <FolderTree key={f.id} folderId={f.id} folders={folders} notes={notes} activeNoteIds={activeNoteIds} onSelectNote={onSelectNote} />
-        ))}
-        {childNotes.map(n => (
-          <div 
-            key={n.id} 
-            onClick={() => onSelectNote(n)}
-            className={`flex items-center gap-1.5 p-1.5 rounded cursor-pointer text-sm font-medium ${activeNoteIds.includes(n.id) ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100 text-gray-700'}`}
-          >
-            <FileText size={16} className={activeNoteIds.includes(n.id) ? "text-blue-600" : "text-gray-400"} />
-            <span className="truncate">{n.name}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
+with open(file_path, 'r', encoding='utf-8') as f:
+    content = f.read()
 
-  const currentFolder = folders.find(f => f.id === folderId);
+# 1. State Replacement
+old_states = """  const [folders, setFolders] = useState<Folder[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [activeNotes, setActiveNotes] = useState<Note[]>([]);
+  const [currentNoteId, setCurrentNoteId] = useState<number | null>(null);
+  const [editorStates, setEditorStates] = useState<Map<number, NoteEditorState>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);"""
 
-  return (
-    <div className="space-y-0.5">
-      <div 
-        className="flex items-center gap-1.5 p-1.5 hover:bg-gray-200 rounded cursor-pointer text-gray-800 font-medium text-sm select-none"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <FolderOpen size={16} className="text-blue-500" /> : <FolderIcon size={16} className="text-gray-500" />}
-        <span className="truncate">{currentFolder?.name || 'Folder'}</span>
-      </div>
-      {isOpen && (
-        <div className="pl-4 space-y-0.5 border-l border-gray-200 ml-2 mt-1">
-          {childFolders.map(f => (
-            <FolderTree key={f.id} folderId={f.id} folders={folders} notes={notes} activeNoteIds={activeNoteIds} onSelectNote={onSelectNote} />
-          ))}
-          {childNotes.map(n => (
-            <div 
-              key={n.id} 
-              onClick={() => onSelectNote(n)}
-              className={`flex items-center gap-1.5 p-1.5 rounded cursor-pointer text-sm ${activeNoteIds.includes(n.id) ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100 text-gray-600'}`}
-            >
-              <FileText size={16} className={activeNoteIds.includes(n.id) ? "text-blue-600" : "text-gray-400"} />
-              <span className="truncate">{n.name}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface NoteEditorState {
-  note: Note;
-  content: string;
-  isSaving: boolean;
-}
-
-export const NotesMain: React.FC = () => {
-  const [folders, setFolders] = useState<Folder[]>([]);
+new_states = """  const [folders, setFolders] = useState<Folder[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   
   // Splits representation
@@ -84,34 +22,29 @@ export const NotesMain: React.FC = () => {
   const [focusedSplitId, setFocusedSplitId] = useState<string>('main');
   
   const [editorStates, setEditorStates] = useState<Map<number, NoteEditorState>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);"""
+content = content.replace(old_states, new_states)
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+# 2. Add lucide-react icon `SplitSquareHorizontal` or generic split icon. Just using Plus icon or replacing import.
+# I will use `PanelRightOpen` or just a label if not present. Let's just use `MoreVertical` or standard text.
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [fetchedFolders, fetchedNotes] = await Promise.all([
-        api.fetchFolders().catch(() => []),
-        api.fetchNotes().catch(() => [])
-      ]);
-      setFolders(fetchedFolders);
-      setNotes(fetchedNotes);
-      
-      if (fetchedNotes.length > 0) {
-        setSplits([{ id: 'main', notes: [fetchedNotes[0]], activeId: fetchedNotes[0].id }]);
-        setFocusedSplitId('main');
-      }
-    } catch (error) {
-      console.error("Błąd pobierania danych:", error);
-    } finally {
-      setIsLoading(false);
+# 3. fetchData
+content = content.replace(
+    "if (fetchedNotes.length > 0 && activeNotes.length === 0)",
+    "if (fetchedNotes.length > 0)"
+)
+content = content.replace(
+    "handleSelectNote(fetchedNotes[0]);",
+    "setSplits([{ id: 'main', notes: [fetchedNotes[0]], activeId: fetchedNotes[0].id }]);\n        setFocusedSplitId('main');"
+)
+
+# 4. handleSelectNote
+old_select = """  const handleSelectNote = (n: Note) => {
+    if (!activeNotes.find(note => note.id === n.id)) {
+      setActiveNotes([...activeNotes, n]);
     }
-  };
-
-  const handleSelectNote = (n: Note) => {
+    setCurrentNoteId(n.id);"""
+new_select = """  const handleSelectNote = (n: Note) => {
     setSplits(prev => {
       const splitIndex = prev.findIndex(s => s.id === focusedSplitId);
       if (splitIndex === -1) return prev;
@@ -120,108 +53,22 @@ export const NotesMain: React.FC = () => {
       const newSplits = [...prev];
       newSplits[splitIndex] = { ...split, notes: newNotes, activeId: n.id };
       return newSplits;
-    });
+    });"""
+content = content.replace(old_select, new_select)
 
-    if (!editorStates.has(n.id)) {
-      const htmlContent = typeof n.content === 'object' && n.content !== null && 'html' in n.content 
-        ? (n.content as any).html 
-        : n.content?.toString() || '';
-      
-      setEditorStates(prev => new Map(prev).set(n.id, {
-        note: n,
-        content: htmlContent,
-        isSaving: false
-      }));
-    }
-  };
-
-  const handleCreateNote = async () => {
-    try {
-      const newNote = await api.createNote("Nowa Notatka", null, { html: "<p>Zacznij pisać...</p>" });
-      setNotes([...notes, newNote]);
-      handleSelectNote(newNote);
-    } catch (error) {
-      console.error("Błąd tworzenia notatki:", error);
-    }
-  };
-
-  const handleUpdateEditorContent = (noteId: number, content: string) => {
-    setEditorStates(prev => {
-      const state = prev.get(noteId);
-      if (state) {
-        return new Map(prev).set(noteId, { ...state, content });
-      }
-      return prev;
-    });
-  };
-
-  const handleUpdateNoteName = (noteId: number, newName: string) => {
-    setEditorStates(prev => {
-      const state = prev.get(noteId);
-      if (state) {
-        return new Map(prev).set(noteId, { 
-          ...state, 
-          note: { ...state.note, name: newName } 
-        });
-      }
-      return prev;
-    });
-  };
-
-  const handleSaveNote = async (noteId: number) => {
-    const state = editorStates.get(noteId);
-    if (!state) return;
-
-    setEditorStates(prev => {
-      const current = prev.get(noteId);
-      if (current) {
-        return new Map(prev).set(noteId, { ...current, isSaving: true });
-      }
-      return prev;
-    });
-
-    try {
-      const updated = await api.updateNote(noteId, { 
-        name: state.note.name, 
-        content: { html: state.content } 
-      });
-      
-      setNotes(prev => prev.map(n => n.id === updated.id ? updated : n));
-      setSplits(prev => prev.map(s => ({
+# 5. handleSaveNote
+content = content.replace(
+    "setActiveNotes(prev => prev.map(n => n.id === updated.id ? updated : n));",
+    """setSplits(prev => prev.map(s => ({
         ...s,
         notes: s.notes.map(n => n.id === updated.id ? updated : n)
-      })));
-      
-      setEditorStates(prev => {
-        const newMap = new Map(prev);
-        const currentState = newMap.get(noteId);
-        if (currentState) {
-          newMap.set(noteId, { ...currentState, note: updated, isSaving: false });
-        }
-        return newMap;
-      });
-    } catch (error) {
-      console.error("Błąd zapisu:", error);
-      setEditorStates(prev => {
-        const newMap = new Map(prev);
-        const currentState = newMap.get(noteId);
-        if (currentState) {
-          newMap.set(noteId, { ...currentState, isSaving: false });
-        }
-        return newMap;
-      });
-    }
-  };
+      })));"""
+)
 
-  const handleDeleteNote = async (noteId: number) => {
-    const state = editorStates.get(noteId);
-    if (!state) return;
-    if (!window.confirm(`Czy na pewno chcesz usunąć "${state.note.name}"?`)) return;
-    
-    try {
-      await api.deleteNote(noteId);
-      setNotes(prev => prev.filter(n => n.id !== noteId));
-      setSplits(prev => prev.map(s => {
+# 6. handleDeleteNote
+content = content.replace(
+    "removeFromActiveNotes(noteId);",
+    """setSplits(prev => prev.map(s => {
         if (!s.notes.find(n => n.id === noteId)) return s;
         const newNotes = s.notes.filter(n => n.id !== noteId);
         let newActiveId = s.activeId;
@@ -234,13 +81,39 @@ export const NotesMain: React.FC = () => {
           }
         }
         return { ...s, notes: newNotes, activeId: newActiveId };
-      }));
-    } catch (error) {
-      console.error("Błąd podczas usuwania notatki:", error);
-    }
-  };
+      }));"""
+)
 
-  const removeFromActiveNotes = (splitId: string, noteId: number, e?: React.MouseEvent) => {
+# 7. removeFromActiveNotes
+old_remove = """  const removeFromActiveNotes = (noteId: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    setActiveNotes(prev => {
+      const newActive = prev.filter(n => n.id !== noteId);
+      
+      if (currentNoteId === noteId) {
+        if (newActive.length > 0) {
+          const index = prev.findIndex(n => n.id === noteId);
+          const nextNote = newActive[Math.min(index, newActive.length - 1)];
+          setCurrentNoteId(nextNote.id);
+        } else {
+          setCurrentNoteId(null);
+        }
+      }
+      
+      return newActive;
+    });
+
+    setEditorStates(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(noteId);
+      return newMap;
+    });
+  };"""
+
+new_remove = """  const removeFromActiveNotes = (splitId: string, noteId: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     
     setSplits(prev => {
@@ -276,22 +149,6 @@ export const NotesMain: React.FC = () => {
       setFocusedSplitId(newSplitId);
       
       const newSplits = [...prev];
-      
-      // Remove note from current split, but don't delete note global state!
-      const currentSplit = { ...newSplits[splitIndex] };
-      currentSplit.notes = currentSplit.notes.filter(n => n.id !== note.id);
-      
-      if (currentSplit.activeId === note.id) {
-         if (currentSplit.notes.length > 0) {
-            const idx = newSplits[splitIndex].notes.findIndex(n => n.id === note.id);
-            currentSplit.activeId = currentSplit.notes[Math.min(idx, currentSplit.notes.length - 1)].id;
-         } else {
-            currentSplit.activeId = null;
-         }
-      }
-      newSplits[splitIndex] = currentSplit;
-
-      // Add to new split
       newSplits.splice(splitIndex + 1, 0, { id: newSplitId, notes: [note], activeId: note.id });
       return newSplits;
     });
@@ -306,46 +163,21 @@ export const NotesMain: React.FC = () => {
       }
       return filtered;
     });
-  };
+  };"""
 
-  return (
-    <Group orientation="horizontal" className="bg-white w-full h-full rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      
-      <Panel defaultSize={20} minSize={15} maxSize={500} className="border-r border-gray-200 bg-gray-50 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <button onClick={handleCreateNote} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors shadow-sm">
-            <Plus size={20} />
-            Nowa Notatka
-          </button>
-          <div className="relative mt-4">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            <input type="text" placeholder="Szukaj plików..." className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner" />
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-2">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <Loader2 className="animate-spin mb-2" size={24} />
-              <span className="text-sm">Ładowanie backendu...</span>
-            </div>
-          ) : (
-            <FolderTree 
-              folderId={null} 
-              folders={folders} 
-              notes={notes} 
-              activeNoteIds={splits.flatMap(s => s.notes.map(n => n.id))} 
-              onSelectNote={handleSelectNote} 
-            />
-          )}
-        </div>
-      </Panel>
+content = content.replace(old_remove, new_remove)
 
-      <Separator className="w-1 bg-gray-200 hover:bg-blue-400 active:bg-blue-500 cursor-col-resize transition-colors flex flex-col justify-center items-center">
-        <MoreVertical size={12} className="text-gray-400" />
-      </Separator>
+# 8. activeNoteIds mappings
+content = content.replace(
+    "activeNoteIds={activeNotes.map(n => n.id)}",
+    "activeNoteIds={splits.flatMap(s => s.notes.map(n => n.id))}"
+)
 
-      <Panel defaultSize={80} minSize={15} className="flex min-w-0 bg-white">
+# 9. Replacing the Panel defaultSize={80} up to bottom
+import re
+match = re.search(r'<Panel defaultSize=\{80\}.*$', content, re.DOTALL)
+if match:
+    replacement_panel = """<Panel defaultSize={80} minSize={15} className="flex min-w-0 bg-white">
         {splits.some(s => s.notes.length > 0) ? (
           <Group orientation="horizontal" className="flex-1 w-full h-full">
             {splits.map((split, splitIndex) => {
@@ -489,3 +321,10 @@ export const NotesMain: React.FC = () => {
     </Group>
   );
 };
+"""
+    content = content[:match.start()] + replacement_panel
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("NotesMain rewritten!")

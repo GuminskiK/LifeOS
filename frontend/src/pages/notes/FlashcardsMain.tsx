@@ -32,6 +32,8 @@ export function FlashcardsMain() {
   const [fnNoteIdStr, setFnNoteIdStr] = useState('');
   const [bulkData, setBulkData] = useState('');
   const [isBulkMode, setIsBulkMode] = useState(false);
+  const [importNoteId, setImportNoteId] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
 
   const loadData = async () => {
     try {
@@ -56,6 +58,47 @@ export function FlashcardsMain() {
     await createFlashGroup({ name: newGroupName, group_type: activeType, parent_id: parentId, owner_id: 0 });
     setNewGroupName('');
     loadData();
+  };
+
+  const importFromNote = async () => {
+    if (!importNoteId || !selectedGroupId) return;
+    setImportLoading(true);
+    try {
+      const note = await getNote(parseInt(importNoteId));
+      if (note && note.content) {
+         const html = typeof note.content === 'object' && 'html' in (note.content as any) ? (note.content as any).html : note.content.toString();
+         const parser = new DOMParser();
+         const doc = parser.parseFromString(html, 'text/html');
+         const rows = Array.from(doc.querySelectorAll('tr'));
+         let successCount = 0;
+         for (const tr of rows) {
+           const cells = Array.from(tr.querySelectorAll('td, th'));
+           if (cells.length >= 2) {
+             const front = cells[0].textContent?.trim();
+             const reverse = cells[1].textContent?.trim();
+             if (front && reverse) {
+               await createFlashCard({
+                 name: `Fiszka z Notatki #${importNoteId}`, front: {text: front}, reverse: {text: reverse}, 
+                 is_active: true, group_id: selectedGroupId
+               });
+               successCount++;
+             }
+           }
+         }
+         window.alert(`Zaimportowano pomyślnie ${successCount} fiszek.`);
+         setImportNoteId('');
+         setIsBulkMode(false);
+         setMainTab('manage');
+         loadData();
+      } else {
+        window.alert("Nie wyciągnięto treści z podanej notatki.");
+      }
+    } catch (e) {
+      console.error(e);
+      window.alert("Wystąpił błąd. Upewnij się, że ID jest poprawne.");
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const handleCreateItem = async () => {
@@ -477,7 +520,15 @@ export function FlashcardsMain() {
                   <div className="flex flex-col gap-6">
                     {isBulkMode && activeType === 'card' ? (
                       <div className="flex-1">
-                        <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Wklej zawartość tabeli (Przód \t Tył)</label>
+                        <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Metoda 1: Import z tabeli w Notatce</label>
+                        <div className="flex gap-4 items-center bg-slate-900 border border-slate-700 p-6 rounded-xl relative mb-8">
+                           <div className="text-3xl text-slate-500 font-mono">#</div>
+                           <input type="number" value={importNoteId} onChange={e => setImportNoteId(e.target.value)} placeholder="Podaj ID wpisując cyfry..." className="flex-1 bg-slate-950 py-4 px-5 rounded-lg border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none text-2xl font-mono transition-all" />
+                           <button onClick={importFromNote} disabled={importLoading || !importNoteId} className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 px-8 py-4 font-bold rounded-lg text-lg flex items-center justify-center transition-all shadow-md">
+                             {importLoading ? <RefreshCcw className="animate-spin" size={24} /> : 'Zaciągnij'}
+                           </button>
+                        </div>
+                        <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Metoda 2: Wklej zawartość tabeli (Przód \t Tył)</label>
                         <textarea value={bulkData} onChange={e => setBulkData(e.target.value)} placeholder="Skopiuj i wklej zawartość tabeli (kolumny z notatki / excel, przedzielone tabem)..." className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none resize-y min-h-[300px] text-sm font-mono transition-all pr-4" />
                         <p className="text-xs text-slate-500 mt-2">Użyj formatu: <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300">Front (pytanie) [TAB] Odpowiedź (Tył)</code>. Zignorowane zostaną niekompletne linie.</p>
                       </div>
