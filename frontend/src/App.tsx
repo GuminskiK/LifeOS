@@ -7,8 +7,8 @@ import { TwoFactorSetup } from './pages/auth/TwoFactorSetup';
 import { Settings } from './pages/settings/Settings';
 import { NotesMain } from './pages/notes/NotesMain';
 import { FlashcardsMain } from './pages/notes/FlashcardsMain';
-import { WorkoutMain } from './pages/notes/WorkoutMain';
-
+import { WorkoutMain } from './pages/workout/WorkoutMain';
+import { TasksMain } from './pages/tasks/TasksMain';
 // Prosty element zabezpieczający trasowanie (wymagany LocalStorage Token)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -30,7 +30,7 @@ const App = () => {
           
           <Route path="notes" element={<NotesMain />} />
           <Route path="flashcards" element={<FlashcardsMain />} />
-          <Route path="tasks" element={<div className="text-2xl text-gray-600">Baza Twojego poziomu trudności i celi życiowych (Strefa dla Tasks)</div>} />
+          <Route path="tasks" element={<TasksMain/>}/>
           <Route path="workouts" element={<WorkoutMain/>} />
           <Route path="social" element={<div className="text-2xl text-gray-600">Agregator kanałów i nowości (Strefa dla SocialMediaAggregator)</div>} />
           

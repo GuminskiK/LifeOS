@@ -145,9 +145,21 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: builder
     container_name: lifeos-frontend
     ports:
-      - "5173:80"
+      - "5173:5173"
+    command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+        - action: rebuild
+          path: ./frontend/package.json
     depends_on:
       - auth
       - notes
