@@ -27,6 +27,7 @@
     "@tiptap/pm": "^3.22.3",
     "@tiptap/react": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",
+    "@vidstack/react": "^1.12.13",
     "axios": "^1.15.0",
     "baseline-browser-mapping": "^2.10.18",
     "browserslist": "^4.28.2",
@@ -42,7 +43,8 @@
     "react-resizable-panels": "^4.10.0",
     "react-router-dom": "^7.14.0",
     "source-map-js": "^1.2.1",
-    "update-browserslist-db": "^1.2.3"
+    "update-browserslist-db": "^1.2.3",
+    "vidstack": "^1.12.13"
   },
   "scripts": {
     "dev": "vite",

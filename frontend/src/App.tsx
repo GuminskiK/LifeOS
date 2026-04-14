@@ -9,6 +9,7 @@ import { NotesMain } from './pages/notes/NotesMain';
 import { FlashcardsMain } from './pages/notes/FlashcardsMain';
 import { WorkoutMain } from './pages/workout/WorkoutMain';
 import { TasksMain } from './pages/tasks/TasksMain';
+import { SocialMain } from './pages/social/SocialMain';
 // Prosty element zabezpieczający trasowanie (wymagany LocalStorage Token)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -32,7 +33,7 @@ const App = () => {
           <Route path="flashcards" element={<FlashcardsMain />} />
           <Route path="tasks" element={<TasksMain/>}/>
           <Route path="workouts" element={<WorkoutMain/>} />
-          <Route path="social" element={<div className="text-2xl text-gray-600">Agregator kanałów i nowości (Strefa dla SocialMediaAggregator)</div>} />
+          <Route path="social" element={<SocialMain />} />
           
           {/* Ustawienia Profilowe */}
           <Route path="settings" element={<Settings />} />

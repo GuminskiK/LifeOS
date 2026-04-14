@@ -63,3 +63,31 @@ async def get_creator_feed(
     )
     results = await session.exec(statement)
     return results.all()
+
+@router.get("/single/{post_id}", response_model=PostRead)
+async def get_single_post(
+    post_id: int,
+    session: AsyncSession = Depends(db_session),
+):
+    """
+    Pobiera pojedynczy post po ID.
+    """
+    post = await session.get(Post, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post nie znaleziony")
+    return post
+
+@router.get("/stats/summary")
+async def get_posts_summary(
+    session: AsyncSession = Depends(db_session),
+):
+    """
+    Zwraca liczbę postów per typ (long form, short, story, post).
+    """
+    from sqlalchemy import func
+    from app.models.Posts import PostType
+    result = await session.exec(
+        select(Post.post_type, func.count(Post.id)).group_by(Post.post_type)
+    )
+    stats = {k.value if isinstance(k, PostType) else k: v for k, v in result}
+    return stats

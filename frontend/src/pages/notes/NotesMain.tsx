@@ -78,6 +78,7 @@ export const NotesMain: React.FC = () => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNotes, setActiveNotes] = useState<Note[]>([]);
+  const [currentNoteId, setCurrentNoteId] = useState<number | null>(null);
   const [editorStates, setEditorStates] = useState<Map<number, NoteEditorState>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -109,6 +110,7 @@ export const NotesMain: React.FC = () => {
     if (!activeNotes.find(note => note.id === n.id)) {
       setActiveNotes([...activeNotes, n]);
     }
+    setCurrentNoteId(n.id);
 
     if (!editorStates.has(n.id)) {
       const htmlContent = typeof n.content === 'object' && n.content !== null && 'html' in n.content 
@@ -212,8 +214,27 @@ export const NotesMain: React.FC = () => {
     }
   };
 
-  const removeFromActiveNotes = (noteId: number) => {
-    setActiveNotes(prev => prev.filter(n => n.id !== noteId));
+  const removeFromActiveNotes = (noteId: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    setActiveNotes(prev => {
+      const newActive = prev.filter(n => n.id !== noteId);
+      
+      if (currentNoteId === noteId) {
+        if (newActive.length > 0) {
+          const index = prev.findIndex(n => n.id === noteId);
+          const nextNote = newActive[Math.min(index, newActive.length - 1)];
+          setCurrentNoteId(nextNote.id);
+        } else {
+          setCurrentNoteId(null);
+        }
+      }
+      
+      return newActive;
+    });
+
     setEditorStates(prev => {
       const newMap = new Map(prev);
       newMap.delete(noteId);
@@ -262,37 +283,45 @@ export const NotesMain: React.FC = () => {
         {activeNotes.length > 0 ? (
           <>
             <div className="flex bg-gray-100 border-b border-gray-200 overflow-x-auto select-none">
-              {activeNotes.map((note, index) => (
-                <div key={note.id} className="flex items-center border-r border-gray-200">
-                  <div className={`px-4 py-2 text-sm font-medium flex items-center gap-2 cursor-pointer ${
-                    index === activeNotes.length - 1 
-                      ? 'bg-white border-t-2 border-t-blue-500 text-blue-700' 
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                  }`}>
-                    <FileText size={14} />
-                    <span className="truncate max-w-xs">{note.name}</span>
+              {activeNotes.map((note) => (
+                <div key={note.id} className="flex flex-shrink-0 items-center border-r border-gray-200 relative group">
+                  <div 
+                    onClick={() => setCurrentNoteId(note.id)}
+                    className={`px-4 py-2 text-sm font-medium flex items-center gap-2 cursor-pointer transition-colors w-48 ${
+                      currentNoteId === note.id
+                        ? 'bg-white border-t-2 border-t-blue-500 text-blue-700' 
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FileText size={14} className={currentNoteId === note.id ? "text-blue-600" : "text-gray-400"} />
+                    <span className="truncate flex-1">{note.name || 'Bez tytułu'}</span>
+                    
+                    <button
+                      onClick={(e) => removeFromActiveNotes(note.id, e)}
+                      className={`p-0.5 rounded-md hover:bg-gray-200 transition-colors ${currentNoteId === note.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                      title="Zamknij (Ctrl+W)"
+                    >
+                      <X size={14} className="text-gray-500" />
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
 
             <Group orientation="horizontal" className="flex-1">
-              {activeNotes.map((note, index) => {
+              {activeNotes.filter(n => n.id === currentNoteId).map((note) => {
                 const state = editorStates.get(note.id);
                 return (
                   <React.Fragment key={note.id}>
-                    {index > 0 && (
-                      <Separator className="w-1 bg-gray-200 hover:bg-blue-400 active:bg-blue-500 cursor-col-resize" />
-                    )}
-                    <Panel defaultSize={100 / activeNotes.length} minSize={20} className="flex flex-col min-w-0">
+                    <Panel defaultSize={100} minSize={20} className="flex flex-col min-w-0">
                       {state ? (
                         <>
-                          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
                             <input 
                               type="text" 
                               value={state.note.name} 
                               onChange={(e) => handleUpdateNoteName(note.id, e.target.value)}
-                              className="text-lg font-bold text-gray-800 bg-transparent border-none focus:outline-none flex-1 truncate" 
+                              className="text-2xl font-bold text-gray-800 bg-transparent border-none focus:outline-none flex-1 truncate" 
                               placeholder="Tytuł notatki..."
                             />
                             <div className="flex items-center gap-2 px-1">
@@ -305,26 +334,19 @@ export const NotesMain: React.FC = () => {
                               </button>
                               <button 
                                 onClick={() => handleDeleteNote(note.id)}
-                                className="flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
-                                title="Usuń notatkę"
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors border border-transparent hover:border-red-200"
+                                title="Usuń notatkę trwale"
                               >
-                                <Trash2 size={18} />
+                                <Trash2 size={16} /> Usuń
                               </button>
                               <button 
                                 onClick={() => handleSaveNote(note.id)}
                                 disabled={state.isSaving}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors shadow-sm border border-gray-300 disabled:opacity-50"
+                                className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm border border-blue-700 disabled:opacity-70 disabled:bg-blue-400"
                                 title="Zapisz zmiany (Ctrl+S)"
                               >
-                                {state.isSaving ? <Loader2 size={16} className="animate-spin text-blue-600" /> : <Save size={16} className="text-blue-600" />}
+                                {state.isSaving ? <Loader2 size={16} className="animate-spin text-white" /> : <Save size={16} className="text-white" />}
                                 {state.isSaving ? 'Zapisywanie...' : 'Zapisz'}
-                              </button>
-                              <button 
-                                onClick={() => removeFromActiveNotes(note.id)}
-                                className="flex items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-300"
-                                title="Zamknij notatkę"
-                              >
-                                <X size={18} />
                               </button>
                             </div>
                           </div>

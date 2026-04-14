@@ -30,6 +30,8 @@ export function FlashcardsMain() {
   const [fcFront, setFcFront] = useState('');
   const [fcReverse, setFcReverse] = useState('');
   const [fnNoteIdStr, setFnNoteIdStr] = useState('');
+  const [bulkData, setBulkData] = useState('');
+  const [isBulkMode, setIsBulkMode] = useState(false);
 
   const loadData = async () => {
     try {
@@ -57,8 +59,32 @@ export function FlashcardsMain() {
   };
 
   const handleCreateItem = async () => {
-    if (!fcName && activeType === 'card' && !fcFront) return;
     if (!selectedGroupId) return;
+    
+    if (activeType === 'card' && isBulkMode) {
+      if (!bulkData.trim()) return;
+      const lines = bulkData.split('\n');
+      for (const line of lines) {
+        const parts = line.split('\t');
+        if (parts.length >= 2) {
+          const front = parts[0].trim();
+          const reverse = parts[1].trim();
+          if (front && reverse) {
+             await createFlashCard({
+               name: "Z wklejki", front: {text: front}, reverse: {text: reverse}, 
+               is_active: true, group_id: selectedGroupId
+             });
+          }
+        }
+      }
+      setBulkData('');
+      setIsBulkMode(false);
+      setMainTab('manage');
+      loadData();
+      return;
+    }
+
+    if (!fcName && activeType === 'card' && !fcFront) return;
     
     if (activeType === 'card') {
       await createFlashCard({
@@ -243,10 +269,6 @@ export function FlashcardsMain() {
     <div className="flex h-full w-full bg-slate-900 text-slate-200">
       {/* Sidebar based on UI Sketch */}
       <div className="w-80 border-r border-slate-800 bg-slate-950 p-4 flex flex-col shrink-0">
-        
-        <h2 className="text-xl font-bold text-indigo-400 mb-4 pl-2 flex items-center gap-2">
-           FlashSpace / Rep
-        </h2>
 
         {/* Left Side SELECT Option */}
         <div className="relative mb-6">
@@ -441,43 +463,63 @@ export function FlashcardsMain() {
 
               {mainTab === 'add' && (
                 <div className="max-w-2xl mx-auto bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-xl">
-                  <h3 className="font-bold text-2xl mb-8 text-indigo-300 border-b border-slate-700 pb-4">Nowy element w folderze "{selectedGroup.name}"</h3>
+                  <div className="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
+                    <h3 className="font-bold text-2xl text-indigo-300">Nowy element w "{selectedGroup.name}"</h3>
+                    {activeType === 'card' && (
+                      <button 
+                        onClick={() => setIsBulkMode(!isBulkMode)}
+                        className="text-sm px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold transition-colors"
+                      >
+                        {isBulkMode ? "Wróć do pojedynczych" : "Wklej z tabeli (Masowo)"}
+                      </button>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-6">
-                    <div>
-                      <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Nazwa (opcjonalnie)</label>
-                      <input value={fcName} onChange={e => setFcName(e.target.value)} placeholder="np. Słówko 1, Definicja B" className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none text-lg transition-all" />
-                    </div>
-                    
-                    {activeType === 'card' ? (
-                      <>
-                        <div className="flex flex-col md:flex-row gap-6">
-                          <div className="flex-1">
-                            <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Przód (pytanie)</label>
-                            <textarea value={fcFront} onChange={e => setFcFront(e.target.value)} placeholder="Zadaj zagadkę..." className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[160px] text-lg transition-all" />
-                          </div>
-                          <div className="flex-1">
-                            <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Tył (odpowiedź)</label>
-                            <textarea value={fcReverse} onChange={e => setFcReverse(e.target.value)} placeholder="Dokładna odpowiedź..." className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[160px] text-lg transition-all" />
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-                        <label className="text-sm text-slate-300 font-bold mb-3 block tracking-wide">Podepnij ID Notatki (FlashNote)</label>
-                        <div className="flex items-center gap-3">
-                           <div className="text-2xl text-slate-500 font-mono">#</div>
-                           <input type="number" value={fnNoteIdStr} onChange={e => setFnNoteIdStr(e.target.value)} placeholder="2077" className="w-full bg-slate-950 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none text-2xl font-mono transition-all" />
-                        </div>
-                        <p className="text-sm mt-4 text-slate-500 flex items-center gap-2"><ExternalLink size={14}/> Wklej tutaj skopiowane wcześniej ID Notatki.</p>
+                    {isBulkMode && activeType === 'card' ? (
+                      <div className="flex-1">
+                        <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Wklej zawartość tabeli (Przód \t Tył)</label>
+                        <textarea value={bulkData} onChange={e => setBulkData(e.target.value)} placeholder="Skopiuj i wklej zawartość tabeli (kolumny z notatki / excel, przedzielone tabem)..." className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none resize-y min-h-[300px] text-sm font-mono transition-all pr-4" />
+                        <p className="text-xs text-slate-500 mt-2">Użyj formatu: <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300">Front (pytanie) [TAB] Odpowiedź (Tył)</code>. Zignorowane zostaną niekompletne linie.</p>
                       </div>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Nazwa (opcjonalnie)</label>
+                          <input value={fcName} onChange={e => setFcName(e.target.value)} placeholder="np. Słówko 1, Definicja B" className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none text-lg transition-all" />
+                        </div>
+                        
+                        {activeType === 'card' ? (
+                          <>
+                            <div className="flex flex-col md:flex-row gap-6">
+                              <div className="flex-1">
+                                <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Przód (pytanie)</label>
+                                <textarea value={fcFront} onChange={e => setFcFront(e.target.value)} placeholder="Zadaj zagadkę..." className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[160px] text-lg transition-all" />
+                              </div>
+                              <div className="flex-1">
+                                <label className="text-sm text-slate-400 font-bold mb-2 block uppercase tracking-wider">Tył (odpowiedź)</label>
+                                <textarea value={fcReverse} onChange={e => setFcReverse(e.target.value)} placeholder="Dokładna odpowiedź..." className="w-full bg-slate-900 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[160px] text-lg transition-all" />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
+                            <label className="text-sm text-slate-300 font-bold mb-3 block tracking-wide">Podepnij ID Notatki (FlashNote)</label>
+                            <div className="flex items-center gap-3">
+                               <div className="text-2xl text-slate-500 font-mono">#</div>
+                               <input type="number" value={fnNoteIdStr} onChange={e => setFnNoteIdStr(e.target.value)} placeholder="2077" className="w-full bg-slate-950 py-4 px-5 rounded-xl border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none text-2xl font-mono transition-all" />
+                            </div>
+                            <p className="text-sm mt-4 text-slate-500 flex items-center gap-2"><ExternalLink size={14}/> Wklej tutaj skopiowane wcześniej ID Notatki.</p>
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     <button 
                       onClick={handleCreateItem} 
-                      disabled={activeType === 'card' ? (!fcFront || !fcReverse) : !fnNoteIdStr}
+                      disabled={isBulkMode ? !bulkData.trim() : (activeType === 'card' ? (!fcFront || !fcReverse) : !fnNoteIdStr)}
                       className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 py-5 rounded-2xl font-bold mt-4 text-xl transition-all shadow-lg hover:shadow-indigo-500/20 disabled:shadow-none"
                     >
-                      Utwórz i dodaj
+                      {activeType === 'card' && isBulkMode ? 'Utwórz masowo' : 'Utwórz i dodaj'}
                     </button>
                   </div>
                 </div>

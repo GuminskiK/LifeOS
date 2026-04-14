@@ -5,10 +5,15 @@ export interface Task {
   name: string;
   description?: string;
   type: 'habit' | 'timed_task' | 'task' | 'timed_milestone' | 'milestone' | 'event' | 'holiday';
+  start_date?: string;
+  end_date?: string;
+  priority?: number;
+  recurrence?: string;
   xp_reward: number;
   currency_reward: number;
   is_archived: boolean;
   category_id?: number;
+  parent_id?: number;
 }
 
 export interface Vault {
