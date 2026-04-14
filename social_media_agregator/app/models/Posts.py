@@ -32,7 +32,7 @@ class PostCreate(PostBase):
     pass
 
 class PostRead(PostBase):
-    pass
+    id: int
 
 class PostUpdate(SQLModel):
     name: Optional[str] = None

@@ -24,10 +24,11 @@ class Platform(PlatformBase, table=True):
     creator: Optional["Creator"] = Relationship(back_populates="platforms")
 
 class PlatformCreate(PlatformBase):
-    pass
+    creator_id: int
 
 class PlatformRead(PlatformBase):
-    pass
+    id: int
+    creator_id: int
 
 class PlatformUpdate(SQLModel):
     name: Optional[str] = None

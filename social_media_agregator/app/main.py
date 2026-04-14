@@ -16,7 +16,7 @@ from app.core.config import settings
 from contextlib import asynccontextmanager
 from app.core.scheduler import start_scheduler, scheduler
 
-from app.api.routers import posts, scraper, aggregator
+from app.api.routers import posts, scraper, aggregator, creators, platforms
 
 setup_logging(json_logs=False, log_level="INFO")
 
@@ -54,6 +54,8 @@ app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT), name="media")
 app.include_router(posts.router)
 app.include_router(scraper.router)
 app.include_router(aggregator.router)
+app.include_router(creators.router)
+app.include_router(platforms.router)
 
 
 origins = [

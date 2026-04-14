@@ -106,3 +106,27 @@ async def get_favorites(
         select(Post).join(FavoritePost, FavoritePost.post_id == Post.id).where(FavoritePost.user_id == user_id)
     )
     return result.all()
+
+@router.get('/scraper-configs/all', tags=['scraper-configs'])
+async def get_all_scraper_configs(
+    session: AsyncSession = Depends(db_session)
+):
+    '''
+    Zwraca wszystkie konfiguracje scraperow wraz z info o platformie i tworcy
+    '''
+    result = await session.exec(
+        select(ScraperConfig, Platform, Creator)
+        .join(Platform, Platform.id == ScraperConfig.platform_id)
+        .join(Creator, Creator.id == Platform.creator_id)
+    )
+    
+    configs = []
+    for config, platform, creator in result:
+        config_dict = config.model_dump()
+        config_dict['platform_name'] = platform.name
+        config_dict['platform_type'] = platform.platform_type
+        config_dict['creator_name'] = creator.name
+        configs.append(config_dict)
+    
+    return configs
+

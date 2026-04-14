@@ -10,7 +10,7 @@ router = APIRouter(prefix="/platforms", tags=["platforms"])
 
 @router.post("", response_model=PlatformRead, status_code=201)
 async def post_platform(session: db_session, user: current_active_user, platform: PlatformCreate):
-    return await create_platform(session, platform, user.id)
+    return await create_platform(session, platform, platform.creator_id)
 
 @router.get("", response_model=List[PlatformRead])
 async def get_platform(session: db_session, user: current_active_user):
