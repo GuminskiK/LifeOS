@@ -37,9 +37,14 @@ class InternalServerErrorException(AppBaseException):
 
 
 ###########################
-#class SessionNotFoundException(ResourceNotFoundException):
-#    def __init__(self, resource_name: str = "Session"):
-#        super().__init__(resource_name=resource_name)
+class CreatorNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "Creator"):
+        super().__init__(resource_name=resource_name)
+
+class PlatformNotFoundException(ResourceNotFoundException):
+    def __init__(self, resource_name: str = "Platform"):
+        super().__init__(resource_name=resource_name)
+
 
 
 ##########################

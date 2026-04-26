@@ -1,12 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Settings, MessageCircle, Plus } from 'lucide-react';
+import * as api from '../../../api/socialApi';
 
 interface CreatorModalProps {
   editingCreator: any;
   setShowCreatorModal: (s: boolean) => void;
+  onSaveCreator?: () => void;
 }
 
-export const CreatorModal: React.FC<CreatorModalProps> = ({ editingCreator, setShowCreatorModal }) => {
+export const CreatorModal: React.FC<CreatorModalProps> = ({ editingCreator, setShowCreatorModal, onSaveCreator }) => {
+  const [name, setName] = useState(editingCreator?.name || '');
+  const [bio, setBio] = useState(editingCreator?.bio || '');
+  const [platforms, setPlatforms] = useState<string[]>(
+    editingCreator?.platforms?.map((p: any) => p.name) || []
+  );
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      if (editingCreator) {
+        await api.updateCreator(editingCreator.id, { name, bio });
+      } else {
+        await api.addCreator({ name, bio, platforms: platforms.map(p => ({ name: p, platform_type: p as any })) as any });
+      }
+      setShowCreatorModal(false);
+      if (onSaveCreator) onSaveCreator();
+    } catch (e) {
+      console.error('Błąd podczas zapisywania twórcy', e);
+      alert('Nie udało się zapisać twórcy');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -14,18 +41,26 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({ editingCreator, setS
         <div className="space-y-4">
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Nazwa Kreatora / Profilu</label>
-            <input type="text" className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="np. MKBHD" defaultValue={editingCreator?.name} />
+            <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="np. MKBHD" />
           </div>
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Krótkie Bio (Opcjonalnie)</label>
-            <input type="text" className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="np. Kanał technologiczny" defaultValue={editingCreator?.bio} />
+            <input type="text" value={bio} onChange={e => setBio(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="np. Kanał technologiczny" />
           </div>
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Obsługiwane Platformy</label>
             <div className="flex gap-2">
               {['youtube', 'x', 'instagram', 'tiktok'].map(platform => (
                 <label key={platform} className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 cursor-pointer">
-                  <input type="checkbox" defaultChecked={editingCreator?.platforms?.some((p: any) => p.name === platform)} className="rounded text-blue-500 focus:ring-blue-500" />
+                  <input 
+                    type="checkbox" 
+                    checked={platforms.includes(platform)}
+                    onChange={(e) => {
+                      if (e.target.checked) setPlatforms([...platforms, platform]);
+                      else setPlatforms(platforms.filter(p => p !== platform));
+                    }}
+                    className="rounded text-blue-500 focus:ring-blue-500" 
+                  />
                   <span className="capitalize">{platform}</span>
                 </label>
               ))}
@@ -34,7 +69,7 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({ editingCreator, setS
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={() => setShowCreatorModal(false)} className="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-colors">Anuluj</button>
-          <button onClick={() => { setShowCreatorModal(false); alert('Zapisano'); }} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">Zapisz Twórcę</button>
+          <button onClick={handleSave} disabled={loading} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:bg-blue-300">Zapisz Twórcę</button>
         </div>
       </div>
     </div>

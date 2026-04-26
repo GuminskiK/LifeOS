@@ -25,7 +25,7 @@ async def fetch_exercise_by_id(session: db_session, exercise_id: int, owner_id: 
     return exercise
 
 
-async def fetch_user_categories(session: db_session, owner_id: int):
+async def fetch_user_exercises(session: db_session, owner_id: int):
 
     result = await session.exec(select(Exercise).where(Exercise.owner_id == owner_id))
     exercise = result.all()

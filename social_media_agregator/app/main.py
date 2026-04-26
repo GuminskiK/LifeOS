@@ -51,11 +51,11 @@ app.add_middleware(StructlogMiddleware)
 os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
 app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT), name="media")
 
-app.include_router(posts.router)
-app.include_router(scraper.router)
-app.include_router(aggregator.router)
-app.include_router(creators.router)
-app.include_router(platforms.router)
+app.include_router(posts)
+app.include_router(scraper)
+app.include_router(aggregator)
+app.include_router(creators)
+app.include_router(platforms)
 
 
 origins = [

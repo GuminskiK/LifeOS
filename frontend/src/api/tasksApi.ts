@@ -115,3 +115,18 @@ export const fetchTaskForecast = async (start: string, end: string): Promise<any
   const response = await tasksApi.get(`/tasks/forecast`, { params: { start, end } });
   return response.data;
 };
+
+export const createCategory = async (data: Partial<Category>): Promise<Category> => {
+  const response = await tasksApi.post<Category>('/categories', data);
+  return response.data;
+};
+
+export const createStreak = async (data: Partial<Streak>): Promise<Streak> => {
+  const response = await tasksApi.post<Streak>('/streaks', data);
+  return response.data;
+};
+
+export const createReward = async (data: Partial<Reward>): Promise<Reward> => {
+  const response = await tasksApi.post<Reward>('/rewards', data);
+  return response.data;
+};

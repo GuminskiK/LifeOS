@@ -10,7 +10,7 @@ from app.api.deps import db_session, redis_client
 from common_lib.logger.logger import setup_logging
 from common_lib.logger.logging_middleware import StructlogMiddleware
 from app.core.config import settings
-#from app.api.routers import 
+from app.api.routers import exercise, exercise_log, statistics, workout, workout_session, workout_steps
 
 from contextlib import asynccontextmanager
 
@@ -38,8 +38,12 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(StructlogMiddleware)
 
-### app.include_router(users.router)
-
+app.include_router(workout.router)
+app.include_router(workout_session.router)
+app.include_router(workout_steps.router)
+app.include_router(exercise.router)
+app.include_router(exercise_log.router)
+app.include_router(statistics.router)
 
 origins = [
     "http://localhost.tiangolo.com",

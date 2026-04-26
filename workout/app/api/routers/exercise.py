@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.deps import db_session, current_active_user
 from app.models.Exercise import ExerciseRead, ExerciseCreate, ExerciseUpdate
 from app.services.exercise_crud import (
-    create_exercise, fetch_exercise_by_id, fetch_user_exercise, update_exercise, delete_exercise
+    create_exercise, fetch_exercise_by_id, fetch_user_exercises, update_exercise, delete_exercise
 )
 from typing import List
 
@@ -13,8 +13,8 @@ async def post_exercise(session: db_session, user: current_active_user, exercise
     return await create_exercise(session, exercise, user.id)
 
 @router.get("", response_model=List[ExerciseRead])
-async def get_exercise(session: db_session, user: current_active_user):
-    return await fetch_user_exercise(session, user.id)
+async def get_exercises(session: db_session, user: current_active_user):
+    return await fetch_user_exercises(session, user.id)
 
 @router.get("/{exercise_id}", response_model=ExerciseRead)
 async def get_exercise_by_id(session: db_session, user: current_active_user, exercise_id: int):

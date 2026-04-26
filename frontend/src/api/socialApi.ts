@@ -80,9 +80,6 @@ export const updateScraperConfig = async (configId: number, data: Partial<Scrape
   return response.data;
 };
 
-
-
-
 export const addScraperConfig = async (data: Partial<ScraperConfig>) => {
   const response = await api.post<ScraperConfig>('/aggregator/scraper-configs/', data);
   return response.data;

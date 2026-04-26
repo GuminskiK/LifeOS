@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.deps import db_session, current_active_user
 from app.models.WorkoutStep import WorkoutStepRead, WorkoutStepCreate, WorkoutStepUpdate
 from app.services.workout_step_crud import (
-    create_workout_step, fetch_workout_step_by_id, fetch_user_workout_step, update_workout_step, delete_workout_step
+    create_workout_step, fetch_workout_step_by_id, fetch_user_workout_steps, update_workout_step, delete_workout_step
 )
 from typing import List
 
@@ -13,8 +13,8 @@ async def post_workout_step(session: db_session, user: current_active_user, work
     return await create_workout_step(session, workout_step, user.id)
 
 @router.get("", response_model=List[WorkoutStepRead])
-async def get_workout_step(session: db_session, user: current_active_user):
-    return await fetch_user_workout_step(session, user.id)
+async def get_workout_steps(session: db_session, user: current_active_user):
+    return await fetch_user_workout_steps(session, user.id)
 
 @router.get("/{workout_step_id}", response_model=WorkoutStepRead)
 async def get_workout_step_by_id(session: db_session, user: current_active_user, workout_step_id: int):

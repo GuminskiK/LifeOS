@@ -12,10 +12,10 @@ router = APIRouter(prefix="/feed", tags=["feed"])
 
 @router.get("/global", response_model=List[PostRead])
 async def get_global_feed(
-    session: AsyncSession = Depends(db_session),
+    session: db_session,
     offset: int = 0,
     limit: int = Query(default=20, le=100),
-    post_type: Optional[PostType] = Query(None, description="Filtruj po typie posta (np. video, short, text)"),
+    post_type: Optional[PostType] = Query(None),
 ):
     """
     Pobiera globalny feed wszystkich treści ze wszystkich platform, 
@@ -37,10 +37,10 @@ async def get_global_feed(
 @router.get("/creator/{creator_id}", response_model=List[PostRead])
 async def get_creator_feed(
     creator_id: int,
-    session: AsyncSession = Depends(db_session),
+    session: db_session,
     offset: int = 0,
     limit: int = Query(default=20, le=100),
-    post_type: Optional[PostType] = Query(None, description="Filtruj po typie posta (np. video, short, text)"),
+    post_type: Optional[PostType] = Query(None),
 ):
     """
     Pobiera feed treści dla konkretnego twórcy, agregując posty ze wszystkich jego platform.
@@ -67,7 +67,7 @@ async def get_creator_feed(
 @router.get("/single/{post_id}", response_model=PostRead)
 async def get_single_post(
     post_id: int,
-    session: AsyncSession = Depends(db_session),
+    session: db_session,
 ):
     """
     Pobiera pojedynczy post po ID.
@@ -79,7 +79,7 @@ async def get_single_post(
 
 @router.get("/stats/summary")
 async def get_posts_summary(
-    session: AsyncSession = Depends(db_session),
+    session: db_session,
 ):
     """
     Zwraca liczbę postów per typ (long form, short, story, post).

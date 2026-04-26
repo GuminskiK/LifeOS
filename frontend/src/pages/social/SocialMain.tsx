@@ -31,22 +31,22 @@ export const SocialMain = () => {
   const [creators, setCreators] = useState<api.Creator[]>([]);
   const [feed, setFeed] = useState<api.Post[]>([]);
 
+  const loadData = async () => {
+    try {
+      const [feedData, creatorsData, statusesData] = await Promise.all([
+        api.fetchGlobalFeed(),
+        api.fetchCreators(),
+        api.fetchProcessStatuses()
+      ]);
+      setFeed(feedData);
+      setCreators(creatorsData);
+      setStatuses(statusesData);
+    } catch (e) {
+      console.error('Failed to load social data', e);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [feedData, creatorsData, statusesData] = await Promise.all([
-          api.fetchGlobalFeed(),
-          api.fetchCreators(),
-          api.fetchProcessStatuses()
-        ]);
-        setFeed(feedData);
-        setCreators(creatorsData);
-        setStatuses(statusesData);
-        if(creatorsData.length > 0) setActiveCreatorId(creatorsData[0].id);
-      } catch (e) {
-        console.error('Failed to load social data', e);
-      }
-    };
     loadData();
   }, []);
 
@@ -112,6 +112,7 @@ export const SocialMain = () => {
         <CreatorModal 
           editingCreator={editingCreator}
           setShowCreatorModal={setShowCreatorModal}
+          onSaveCreator={loadData}
         />
       )}
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body
 from app.api.deps import db_session, current_active_user, redis_client
 from app.models.WorkoutSession import WorkoutSessionRead, WorkoutSessionCreate, WorkoutSessionUpdate
 from app.services.workout_session_crud import (
-    create_workout_session, fetch_workout_session_by_id, fetch_user_workout_session, update_workout_session, delete_workout_session
+    create_workout_session, fetch_workout_session_by_id, fetch_user_workout_sessions, update_workout_session, delete_workout_session
 )
 from app.services.workout_session_service import WorkoutSessionService
 from typing import List, Dict, Any
@@ -50,8 +50,8 @@ async def finish_workout_session(session: db_session, redis: redis_client, user:
     return await session_service.finish_session(session, workout_session_id, user.id, redis)
 
 @router.get("", response_model=List[WorkoutSessionRead])
-async def get_workout_session(session: db_session, user: current_active_user):
-    return await fetch_user_workout_session(session, user.id)
+async def get_workout_sessions(session: db_session, user: current_active_user):
+    return await fetch_user_workout_sessions(session, user.id)
 
 @router.get("/{workout_session_id}", response_model=WorkoutSessionRead)
 async def get_workout_session_by_id(session: db_session, user: current_active_user, workout_session_id: int):

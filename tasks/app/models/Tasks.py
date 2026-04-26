@@ -23,7 +23,7 @@ class TaskBase(SQLModel):
     
     type: TaskType = Field(default=TaskType.TASK)
 
-    start_date: Optional[datetime]
+    start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     
     priority: Optional[int] = None

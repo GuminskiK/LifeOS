@@ -15,6 +15,9 @@ class Creator(CreatorBase, table=True):
     user_id: int = Field(foreign_key="user.id")
     user: Optional["User"] = Relationship(back_populates="creators")
     
+class CreatorCreate(CreatorBase):
+    pass
+
 class CreatorRead(CreatorBase):
     pass
 
