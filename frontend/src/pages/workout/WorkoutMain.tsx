@@ -3,9 +3,9 @@ import * as api from '../../api/workoutApi';
 import { 
   Dumbbell, Play, Plus, ChevronRight,Info, Video
 } from 'lucide-react';
-import { AddWorkoutModal } from './AddWorkout.tsx';
-import { AddExerciseModal } from './AddExercise.tsx';
-import { LiveSessionView } from './LiveSession.tsx';
+import { AddWorkoutModal } from './components/AddWorkout.tsx';
+import { AddExerciseModal } from './components/AddExercise.tsx';
+import { LiveSessionView } from './components/LiveSession.tsx';
 
 export const WorkoutMain: React.FC = () => {
   const [view, setView] = useState<'templates' | 'exercises' | 'live' | 'stats'>('templates');
