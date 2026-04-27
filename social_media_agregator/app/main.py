@@ -22,14 +22,26 @@ setup_logging(json_logs=False, log_level="INFO")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from sqlmodel import SQLModel
+    from sqlmodel import SQLModel, select
+    from sqlmodel.ext.asyncio.session import AsyncSession
     from app.api.deps import db_deps
-    from app.models import Post
+    from app.models import Post, User
     try:
         engine = db_deps.get_engine()
         async with engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
             print("Successfully initialized missing tables in lifeos_social_media!")
+        
+        # Zapewnij istnienie użytkownika o ID 1, aby uniknąć błędów klucza obcego w dev
+        async with AsyncSession(engine) as session:
+            statement = select(User).where(User.id == 1)
+            result = await session.exec(statement)
+            if not result.first():
+                dev_user = User(id=1, username="admin", hashed_password="dev_password")
+                session.add(dev_user)
+                await session.commit()
+                print("Seeded default dev user (ID: 1)")
+
     except Exception as e:
         print(f"Skipping DB initialization, likely not reachable: {e}")
     

@@ -236,6 +236,34 @@ export const NotesMain: React.FC = () => {
     });
   };
 
+  const handleCreateFolder = async (noteIdToMove?: number) => {
+    const name = window.prompt("Podaj nazwę nowego folderu:");
+    if (!name || !name.trim()) return;
+    try {
+      const newFolder = await api.createFolder(name.trim(), null);
+      setFolders([...folders, newFolder]);
+      if (noteIdToMove) {
+        await handleMoveNote(noteIdToMove, newFolder.id);
+      }
+    } catch (error) {
+      console.error("Błąd tworzenia folderu:", error);
+    }
+  };
+
+  const handleMoveNote = async (noteId: number, newFolderId: number | null) => {
+    try {
+      // Optymistycznie:
+      setNotes(prev => prev.map(n => n.id === noteId ? { ...n, folder_id: newFolderId } : n));
+      const state = editorStates.get(noteId);
+      const contentApi = state ? { html: state.content } : undefined;
+      await api.updateNote(noteId, { folder_id: newFolderId });
+    } catch (error) {
+      console.error("Błąd przenoszenia notatki:", error);
+      // Rewert w przypadku błędu
+      fetchData();
+    }
+  };
+
   return (
     <Group orientation="horizontal" className="bg-white w-full h-full rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <NotesSidebar 
@@ -244,7 +272,9 @@ export const NotesMain: React.FC = () => {
         notes={notes} 
         splits={splits} 
         onSelectNote={handleSelectNote} 
-        onCreateNote={handleCreateNote} 
+        onCreateNote={handleCreateNote}
+        onCreateFolder={handleCreateFolder}
+        onMoveNote={handleMoveNote}
       />
       <NotesWorkspace 
         splits={splits}

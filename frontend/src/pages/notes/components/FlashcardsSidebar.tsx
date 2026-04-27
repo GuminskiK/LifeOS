@@ -42,7 +42,9 @@ export const FlashcardsSidebar: React.FC<FlashcardsSidebarProps> = ({
           let groupItems = activeType === 'card' 
             ? cards.filter(c => c.group_id && des.includes(c.group_id)) 
             : notes.filter(n => n.group_id && des.includes(n.group_id));
+          const totalCount = groupItems.length;
           const dueCount = groupItems.filter(i => i.is_active && i.next_review && i.next_review <= now).length;
+          const learnedCount = totalCount - dueCount;
           
           return (
             <li key={g.id} className="w-full">
@@ -53,15 +55,23 @@ export const FlashcardsSidebar: React.FC<FlashcardsSidebarProps> = ({
                 }}
                 className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-indigo-600 shadow-md text-white' : 'text-slate-300 hover:bg-slate-700/50'}`}
               >
-                <div className="flex items-center gap-2 truncate">
-                  <FolderIcon size={16} className={isSelected ? "text-indigo-200" : "text-indigo-400"} />
-                  <span className="truncate pr-2 font-medium">{g.name}</span>
+                <div className="flex items-center gap-2 max-w-[65%] truncate">
+                  <FolderIcon size={16} className={isSelected ? "shrink-0 text-indigo-200" : "shrink-0 text-indigo-400"} />
+                  <span className="truncate pr-2 font-medium" title={g.name}>{g.name}</span>
                 </div>
-                {dueCount > 0 && (
-                  <div className="text-[10px] px-2 py-0.5 rounded-full shrink-0 font-bold bg-green-500/20 text-green-300">
-                    {dueCount}
-                  </div>
-                )}
+                <div className="flex items-center gap-1 shrink-0 text-[10px] font-bold">
+                  {totalCount > 0 && <span className="bg-slate-700 text-slate-300 px-1.5 rounded-sm" title="Wszystkie">{totalCount}</span>}
+                  {dueCount > 0 && (
+                    <span className="px-1.5 rounded-sm bg-green-500/20 text-green-400" title="Do nauki">
+                      {dueCount}
+                    </span>
+                  )}
+                  {learnedCount > 0 && totalCount > dueCount && (
+                    <span className="px-1.5 rounded-sm bg-blue-500/20 text-blue-400" title="Nauczone">
+                      {learnedCount}
+                    </span>
+                  )}
+                </div>
               </div>
               {renderTree(g.id, level + 1)}
             </li>

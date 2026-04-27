@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+const fs = require('fs');
+const content = \import React, { useState } from 'react';
 import { FileText, Folder as FolderIcon, FolderOpen, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { Note, Folder } from '../../../api/notesApi';
 
@@ -27,9 +28,13 @@ export const FolderTree: React.FC<{
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // necessary to allow dropping
+  };
+
   if (folderId === null) {
     return (
-      <div className="space-y-0.5">
+      <div className="space-y-0.5" onDrop={handleDrop} onDragOver={handleDragOver}>
         {childFolders.map(f => (
           <FolderTree key={f.id} folderId={f.id} folders={folders} notes={notes} activeNoteIds={activeNoteIds} onSelectNote={onSelectNote} onMoveNote={onMoveNote} />
         ))}
@@ -39,7 +44,7 @@ export const FolderTree: React.FC<{
             draggable
             onDragStart={(e) => handleDragStart(e, n.id)}
             onClick={() => onSelectNote(n)}
-            className={`flex items-center gap-1.5 p-1.5 rounded cursor-pointer text-sm font-medium transition-colors ${activeNoteIds.includes(n.id) ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100 text-gray-700'}`}
+            className={\\\lex items-center gap-1.5 p-1.5 rounded cursor-pointer text-sm font-medium transition-colors \\\\\\}
           >
             <FileText size={16} className={activeNoteIds.includes(n.id) ? "text-blue-600" : "text-gray-400"} />
             <span className="truncate">{n.name}</span>
@@ -52,16 +57,15 @@ export const FolderTree: React.FC<{
   const currentFolder = folders.find(f => f.id === folderId);
 
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-0.5" onDrop={handleDrop} onDragOver={handleDragOver}>
       <div 
-        className="flex items-center gap-1.5 p-1.5 hover:bg-gray-200 rounded cursor-pointer text-gray-800 font-medium text-sm select-none group"
         onClick={() => setIsOpen(!isOpen)}
-        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-        onDrop={handleDrop}
+        className="flex items-center gap-1.5 p-1.5 hover:bg-gray-200 rounded cursor-pointer text-gray-800 font-medium text-sm select-none group"
       >
         {isOpen ? <FolderOpen size={16} className="text-blue-500" /> : <FolderIcon size={16} className="text-gray-500" />}
         <span className="truncate flex-1">{currentFolder?.name || 'Folder'}</span>
       </div>
+      
       {isOpen && (
         <div className="pl-4 space-y-0.5 border-l border-gray-200 ml-2 mt-1">
           {childFolders.map(f => (
@@ -73,7 +77,7 @@ export const FolderTree: React.FC<{
               draggable
               onDragStart={(e) => handleDragStart(e, n.id)}
               onClick={() => onSelectNote(n)}
-              className={`flex items-center gap-1.5 p-1.5 rounded cursor-pointer text-sm transition-colors ${activeNoteIds.includes(n.id) ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100 text-gray-600'}`}
+              className={\\\lex items-center gap-1.5 p-1.5 rounded cursor-pointer text-sm transition-colors \\\\\\}
             >
               <FileText size={16} className={activeNoteIds.includes(n.id) ? "text-blue-600" : "text-gray-400"} />
               <span className="truncate">{n.name}</span>
@@ -83,4 +87,5 @@ export const FolderTree: React.FC<{
       )}
     </div>
   );
-};
+};\;
+fs.writeFileSync('src/pages/notes/components/FolderTree.tsx', content);

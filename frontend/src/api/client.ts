@@ -1,11 +1,11 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
 // Konfiguracje bazowych URL-i dla poszczególnych mikroserwisów
-export const authApi = axios.create({ baseURL: 'http://localhost:8001' });
-export const notesApi = axios.create({ baseURL: 'http://localhost:8002' });
-export const tasksApi = axios.create({ baseURL: 'http://localhost:8003' });
-export const workoutApi = axios.create({ baseURL: 'http://localhost:8004' });
-export const smaApi = axios.create({ baseURL: 'http://localhost:8005' });
+export const authApi = axios.create({ baseURL: 'http://localhost:8001/api' });
+export const notesApi = axios.create({ baseURL: 'http://localhost:8002/api' });
+export const tasksApi = axios.create({ baseURL: 'http://localhost:8003/api' });
+export const workoutApi = axios.create({ baseURL: 'http://localhost:8004/api' });
+export const smaApi = axios.create({ baseURL: 'http://localhost:8005/api' });
 
 const addTokenToRequest = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
   const token = localStorage.getItem('token');

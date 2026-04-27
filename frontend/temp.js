@@ -1,0 +1,1 @@
+const fs = require("fs"); let content = fs.readFileSync("src/pages/notes/components/FolderTree.tsx", "utf8"); content = content.replace(/\x0Clex/g, "`flex").replace(/transition-colors  \+ /g, "transition-colors ${").replace(/\)\}/g, "}`}"); fs.writeFileSync("src/pages/notes/components/FolderTree.tsx", content);

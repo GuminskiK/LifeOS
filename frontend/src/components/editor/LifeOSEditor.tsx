@@ -5,7 +5,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Link from '@tiptap/extension-link';
-import Youtube from '@tiptap/extension-youtube';
+import { CustomYoutube } from './extensions/CustomYoutube';
 import TextAlign from '@tiptap/extension-text-align';
 
 import { CustomTable } from './extensions/CustomTable';
@@ -39,7 +39,7 @@ export const LifeOSEditor: React.FC<LifeOSEditorProps> = ({ content, onChange })
       TableHeader,
       TableCell,
       CustomImage,
-      Youtube.configure({
+      CustomYoutube.configure({
         inline: false,
       }),
       NoteLink,
